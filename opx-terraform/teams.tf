@@ -1,5 +1,7 @@
-resource "github_team" "developers" {
-  name        = "developers"
-  description = "Development Team"
+resource "github_team" "teams" {
+  for_each = var.team_memberships
+
+  name        = each.key
+  description = "${each.key} team"
   privacy     = "closed"
 }
