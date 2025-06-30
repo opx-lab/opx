@@ -16,5 +16,17 @@ variable "team_memberships" {
     #admins         = ["test1"]
     #secops         = ["test2"]
     #developers     = ["test3"]
-  }
+    }
+}
+
+variable "pm_api_token_id" {
+  description = "Proxmox VE API token ID"
+  type        = string
+  sensitive   = true
+}
+
+variable "pm_api_token_secret" {
+  description = "Proxmox VE API token secret"
+  type        = string
+  sensitive   = true
 }
