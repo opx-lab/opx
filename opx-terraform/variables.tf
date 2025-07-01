@@ -19,14 +19,14 @@ variable "team_memberships" {
     }
 }
 
-variable "pm_api_token_id" {
-  description = "Proxmox VE API token ID"
+variable "pm_user" {
+  description = "Proxmox VE user"
   type        = string
-  sensitive   = true
+  default     = "terraform-prov@pve"
 }
 
-variable "pm_api_token_secret" {
-  description = "Proxmox VE API token secret"
+variable "pm_password" {
+  description = "Proxmox VE password"
   type        = string
   sensitive   = true
 }
