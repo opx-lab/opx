@@ -4,6 +4,7 @@ resource "proxmox_vm_qemu" "vm" {
   onboot     = var.onboot
   pxe        = var.pxe
 
+
   cpu {
     cores   = var.cpu_cores
     sockets = 1
@@ -25,11 +26,35 @@ resource "proxmox_vm_qemu" "vm" {
         }
       }
     }
-  }
-
+    ide {
+        ide2 {
+            cdrom {
+          iso = "local:iso/debian-12.11.0-amd64-DVD-1.iso"
+            }
+        }
+    }
+}
+#### FOR CLOUD INIT CONFIGURATION
+  cicustom = <<EOF
+#cloud-config
+network:
+  version: 2
+  ethernets:
+    eth0:
+      dhcp4: false
+      addresses:
+        - ${var.ip_address}/24
+      gateway4: 192.168.55.1
+      nameservers:
+        addresses:
+          - 8.8.8.8
+          - 8.8.4.4
+EOF
+#####
   network {
     id        = 0
     bridge    = "vmbr0"
+
     firewall  = false
     link_down = false
     model     = "e1000"

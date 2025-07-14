@@ -10,4 +10,6 @@ module "proxmox-vm" {
   disk_size  = each.value.disk_size
   pxe        = each.value.pxe
   onboot     = each.value.onboot
+  ip_address = each.value.ip_address
+  subnet = each.value.subnet
 }

@@ -44,3 +44,12 @@ variable "onboot" {
   description = "Start VM on Proxmox boot"
   default     = false
 }
+
+variable "ip_address" {
+  type = string
+}
+
+variable "subnet" {
+  type        = string
+  description = "Subnet for the VM"
+}

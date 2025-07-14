@@ -37,20 +37,22 @@ variable "pm_password" {
 # variables used by Proxmox VM module, VMs creation
 variable "vms" {
   type = map(object({
-    cpu_cores = number
-    memory    = number
-    disk_size = number
-    pxe       = bool
-    onboot    = bool
+    cpu_cores   = number
+    memory      = number
+    disk_size   = number
+    pxe         = bool
+    onboot      = bool
+    ip_address = string
+    subnet      = string
   }))
 
   default = {
-    mgmt-vm = { cpu_cores=3, memory=5120, disk_size=25, pxe=false, onboot=true }
-    monitor-vm = { cpu_cores=2, memory=2048, disk_size=15, pxe=false, onboot=true }
-    docker-vm = { cpu_cores=2, memory=2048, disk_size=15, pxe=false, onboot=false }
-    lb-vm = { cpu_cores=1, memory=1024, disk_size=10, pxe=false, onboot=false }
-    k8smaster-vm = { cpu_cores=2, memory=2048, disk_size=30, pxe=false, onboot=false }
-    k8sworker-vm = { cpu_cores=2, memory=2048, disk_size=30, pxe=false, onboot=false }
-    db-vm = { cpu_cores=2, memory=4096, disk_size=30, pxe=false, onboot=false }
+    mgmt-vm = { cpu_cores=3, memory=5120, disk_size=25, pxe=false, onboot=true, ip_address="192.168.55.10", subnet="192.168.55.0/24" }
+    monitor-vm = { cpu_cores=2, memory=2048, disk_size=15, pxe=false, onboot=true, ip_address="192.168.55.20", subnet="192.168.55.0/24" }
+   # docker-vm = { cpu_cores=2, memory=2048, disk_size=15, pxe=false, onboot=false, ip_address="192.168.55.30" }
+   # lb-vm = { cpu_cores=1, memory=1024, disk_size=10, pxe=false, onboot=false, ip_address="192.168.55.40" }
+   # k8smaster-vm = { cpu_cores=2, memory=2048, disk_size=30, pxe=false, onboot=false, ip_address="192.168.55.50" }
+   # k8sworker-vm = { cpu_cores=2, memory=2048, disk_size=30, pxe=false, onboot=false, ip_address="192.168.55.60" }
+   # db-vm = { cpu_cores=2, memory=4096, disk_size=30, pxe=false, onboot=false, ip_address="192.168.55.70" }
   }
 }
