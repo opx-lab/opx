@@ -1,3 +1,4 @@
+# github vars
 variable "github_token" {
   description = "GitHub Personal Access Token"
   type        = string
@@ -9,6 +10,7 @@ variable "github_username" {
   type        = string
 }
 
+
 variable "team_memberships" {
   description = "Map of team names to list of usernames"
   type = map(list(string))
@@ -19,6 +21,7 @@ variable "team_memberships" {
     }
 }
 
+# Proxmox VE & Terraform integration variables
 variable "pm_user" {
   description = "Proxmox VE user"
   type        = string
@@ -29,4 +32,25 @@ variable "pm_password" {
   description = "Proxmox VE password"
   type        = string
   sensitive   = true
+}
+
+# variables used by Proxmox VM module, VMs creation
+variable "vms" {
+  type = map(object({
+    cpu_cores = number
+    memory    = number
+    disk_size = number
+    pxe       = bool
+    onboot    = bool
+  }))
+
+  default = {
+    mgmt-vm = { cpu_cores=3, memory=5120, disk_size=25, pxe=false, onboot=true }
+    monitor-vm = { cpu_cores=2, memory=2048, disk_size=15, pxe=false, onboot=true }
+    docker-vm = { cpu_cores=2, memory=2048, disk_size=15, pxe=false, onboot=false }
+    lb-vm = { cpu_cores=1, memory=1024, disk_size=10, pxe=false, onboot=false }
+    k8smaster-vm = { cpu_cores=2, memory=2048, disk_size=30, pxe=false, onboot=false }
+    k8sworker-vm = { cpu_cores=2, memory=2048, disk_size=30, pxe=false, onboot=false }
+    db-vm = { cpu_cores=2, memory=4096, disk_size=30, pxe=false, onboot=false }
+  }
 }
