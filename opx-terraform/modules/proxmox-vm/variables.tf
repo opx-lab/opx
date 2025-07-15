@@ -6,7 +6,7 @@ variable "proxmox_host" {
   default = "opx-pc"
 }
 variable "template_name" {
-  default = "template-opx"
+  default = "debian-12-cloudinit-template"
 }
 
 # This defines the custom variables used in the Proxmox VM module

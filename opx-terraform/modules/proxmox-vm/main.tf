@@ -2,38 +2,46 @@ resource "proxmox_vm_qemu" "vm" {
   name       = var.name
   memory     = var.memory
   onboot     = var.onboot
-  pxe        = var.pxe
 
+  target_node = var.proxmox_host
+  clone = var.template_name
+  agent = 1
+  os_type = "cloud-init"
 
+  
   cpu {
     cores   = var.cpu_cores
     sockets = 1
-    type    = "host"
   }
 
-  disks {
-    scsi {
-      scsi0 {
-        disk {
-          size      = var.disk_size
-          storage   = "local"
-          backup    = true
-          cache     = "none"
-          discard   = true
-          emulatessd= true
-          iothread  = true
-          replicate = false
+  serial {
+    id    = 0
+    type  = "socket"
+  }
+
+  scsihw = "virtio-scsi-pci"
+
+    # Setup the disk
+    disks {
+        ide {
+            ide3 {
+                cloudinit {
+                    storage = "local"
+                }
+            }
         }
-      }
-    }
-    ide {
-        ide2 {
-            cdrom {
-          iso = "local:iso/debian-12.11.0-amd64-DVD-1.iso"
+        scsi {
+            scsi0 {
+                disk {
+                    size            = var.disk_size
+                    storage         = "local"
+                    iothread        = true
+                    discard         = true
+                }
             }
         }
     }
-}
+
 #### FOR CLOUD INIT CONFIGURATION
   cicustom = <<EOF
 #cloud-config
@@ -54,22 +62,13 @@ EOF
   network {
     id        = 0
     bridge    = "vmbr0"
-
     firewall  = false
     link_down = false
-    model     = "e1000"
+    model     = "virtio"
   }
+  
 
-  balloon                   = 0
-  bios                      = "seabios"
-  boot                      = "order=scsi0;net0"
-  define_connection_info    = true
-  force_create              = false
-  hotplug                   = "network,disk,usb"
-  kvm                       = true
-  os_type                   = "Linux 5.x - 2.6 Kernel"
-  qemu_os                   = "l26"
-  scsihw                    = "virtio-scsi-pci"
-  tablet                    = true
-  target_node               = "opx-pc"
+   boot = "order=scsi0"
+
+  #sshkeys = var.ssh_key
 }

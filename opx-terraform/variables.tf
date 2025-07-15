@@ -48,7 +48,7 @@ variable "vms" {
 
   default = {
     mgmt-vm = { cpu_cores=3, memory=5120, disk_size=25, pxe=false, onboot=true, ip_address="192.168.55.10", subnet="192.168.55.0/24" }
-    monitor-vm = { cpu_cores=2, memory=2048, disk_size=15, pxe=false, onboot=true, ip_address="192.168.55.20", subnet="192.168.55.0/24" }
+    # monitor-vm = { cpu_cores=2, memory=2048, disk_size=15, pxe=false, onboot=true, ip_address="192.168.55.20", subnet="192.168.55.0/24" }
    # docker-vm = { cpu_cores=2, memory=2048, disk_size=15, pxe=false, onboot=false, ip_address="192.168.55.30" }
    # lb-vm = { cpu_cores=1, memory=1024, disk_size=10, pxe=false, onboot=false, ip_address="192.168.55.40" }
    # k8smaster-vm = { cpu_cores=2, memory=2048, disk_size=30, pxe=false, onboot=false, ip_address="192.168.55.50" }
