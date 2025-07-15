@@ -49,7 +49,7 @@ variable "ip_address" {
   type = string
 }
 
-variable "subnet" {
+variable "gateway" {
   type        = string
-  description = "Subnet for the VM"
+  description = "Gateway IP address (load balancer IP)"
 }

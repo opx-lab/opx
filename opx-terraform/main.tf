@@ -11,5 +11,5 @@ module "proxmox-vm" {
   pxe        = each.value.pxe
   onboot     = each.value.onboot
   ip_address = each.value.ip_address
-  subnet = each.value.subnet
+  gateway    = each.value.gateway
 }
