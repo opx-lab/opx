@@ -3,4 +3,7 @@ resource "github_repository" "opx" {
   visibility = "private"
   auto_init  = true
 
+  lifecycle {
+    prevent_destroy = true
+  }
 }
