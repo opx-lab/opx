@@ -14,3 +14,22 @@ module "proxmox-vm" {
   ip_address = each.value.ip_address
   gateway    = each.value.gateway
 }
+
+output "all_vm_ids" {
+  value = module.proxmox-vm.vm_ids
+}
+
+
+
+
+
+########################
+########################
+########################
+# Proxmox VM firewall rules module
+module "mgmt_vm_firewall" {
+  source = "./modules/proxmox-firewall"
+
+  vm_id           = module.proxmox-vm["mgmt-vm"].vm_id
+  firewall_config = var.firewall_config
+}

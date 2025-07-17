@@ -24,7 +24,7 @@ resource "proxmox_virtual_environment_vm" "vm" {
     datastore_id = "local"
     size     = var.disk_size
     interface = "scsi0"
-    iothread = true
+    iothread = false
   }
 
   serial_device {}

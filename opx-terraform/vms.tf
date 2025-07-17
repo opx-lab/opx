@@ -23,16 +23,16 @@ variable "vms" {
       gateway="192.168.60.10"
       }
 
-    # monitor-vm = { 
-    #   vm_id      = 102
-    #   cpu_cores=2
-    #   memory=2048
-    #   disk_size=15
-    #   pxe=false
-    #   onboot=true
-    #   ip_address="192.168.55.20/24"
-    #   gateway="192.168.60.10"
-    #   }
+    monitor-vm = { 
+      vm_id      = 102
+      cpu_cores=2
+      memory=2048
+      disk_size=15
+      pxe=false
+      onboot=true
+      ip_address="192.168.55.20/24"
+      gateway="192.168.60.10"
+      }
 
     # docker-vm = { 
     #   vm_id      = 103

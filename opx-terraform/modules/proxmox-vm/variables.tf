@@ -2,9 +2,6 @@ variable "ssh_key" {
   default = "ssh-rsa AAAAB3NzaC1y..."
 }
 
-variable "proxmox_host" {
-  default = "opx-pc"
-}
 variable "template_name" {
   default = "debian-12-cloudinit-template"
 }
@@ -57,4 +54,8 @@ variable "gateway" {
 variable "vm_id" {
   type        = number
   description = "VM ID for existing VMs"
+}
+
+variable "proxmox_host" {
+  default = "opx-pc"
 }
