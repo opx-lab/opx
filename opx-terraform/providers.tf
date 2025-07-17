@@ -8,19 +8,18 @@ terraform {
     }
     # Proxmox provider for managing Proxmox VE resources
     proxmox = {
-      source  = "telmate/proxmox"
-      version = "3.0.2-rc01"
+      source = "bpg/proxmox"
+      #version = "3.0.2-rc01"
     }
   }
 }
 
 provider "proxmox" {
 
-
-  pm_api_url      = "https://192.168.1.50:8006/api2/json"
-  pm_user         = var.pm_user
-  pm_password     = var.pm_password
-  pm_tls_insecure = true
+  endpoint      = "https://192.168.1.50:8006/api2/json"
+  username         = var.pm_user
+  password     = var.pm_password
+  insecure = true
 
   # debug log
   #pm_log_enable = true

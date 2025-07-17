@@ -5,6 +5,7 @@ module "proxmox-vm" {
   for_each = var.vms
 
   name       = each.key
+  vm_id      = each.value.vm_id
   cpu_cores  = each.value.cpu_cores
   memory     = each.value.memory
   disk_size  = each.value.disk_size

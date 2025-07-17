@@ -18,7 +18,7 @@ variable "name" {
 variable "cpu_cores" {
   type        = number
   description = "Number of CPU cores"
-  default     = 2
+  default     = 3
 }
 
 variable "memory" {
@@ -52,4 +52,9 @@ variable "ip_address" {
 variable "gateway" {
   type        = string
   description = "Gateway IP address (load balancer IP)"
+}
+
+variable "vm_id" {
+  type        = number
+  description = "VM ID for existing VMs"
 }
