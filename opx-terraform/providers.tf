@@ -1,12 +1,7 @@
 terraform {
   required_version = ">= 1.1.0"
   required_providers {
-    # GitHub provider for managing GitHub resources
-    github = {
-      source  = "integrations/github"
-      version = "~> 6.6.0"
-    }
-    # Proxmox provider for managing Proxmox VE resources
+  # Proxmox provider for managing Proxmox VE resources
     proxmox = {
       source = "bpg/proxmox"
       #version = "3.0.2-rc01"
@@ -29,9 +24,4 @@ provider "proxmox" {
   #  _default = "debug"
   #  _capturelog = ""
   #}
-}
-
-provider "github" {
-  token = var.github_token
-  owner = "opx-lab"
 }
