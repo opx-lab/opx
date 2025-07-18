@@ -6,56 +6,16 @@ variable "template_name" {
   default = "debian-12-cloudinit-template"
 }
 
-# This defines the custom variables used in the Proxmox VM module
-variable "name" {
-  type        = string
-  description = "VM name"
-}
-
-variable "cpu_cores" {
-  type        = number
-  description = "Number of CPU cores"
-  default     = 3
-}
-
-variable "memory" {
-  type        = number
-  description = "Memory in MB"
-  default     = 2048
-}
-
-variable "disk_size" {
-  type        = number
-  description = "Disk size in GB"
-  default     = 32
-}
-
-variable "pxe" {
-  type        = bool
-  description = "Enable PXE boot"
-  default     = true
-}
-
-variable "onboot" {
-  type        = bool
-  description = "Start VM on Proxmox boot"
-  default     = false
-}
-
-variable "ip_address" {
-  type = string
-}
-
-variable "gateway" {
-  type        = string
-  description = "Gateway IP address (load balancer IP)"
-}
-
-variable "vm_id" {
-  type        = number
-  description = "VM ID for existing VMs"
-}
-
-variable "proxmox_host" {
-  default = "opx-pc"
+variable "vms" {
+  description = "Map of virtual machines to create"
+  type = map(object({
+    vm_id      = number
+    cpu_cores  = number
+    memory     = number
+    disk_size  = number
+    pxe        = bool
+    onboot     = bool
+    ip_address = string
+    gateway    = string
+  }))
 }

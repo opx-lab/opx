@@ -1,6 +1,9 @@
 resource "proxmox_virtual_environment_vm" "vm" {
-  name       = var.name
-  node_name  = var.proxmox_host
+  for_each = var.vms
+
+  name       = each.key
+  vm_id     = each.value.vm_id
+  node_name  = "opx-pc" # Use the default node name or set it dynamically
 
   clone {
     vm_id = 9001
@@ -9,20 +12,18 @@ resource "proxmox_virtual_environment_vm" "vm" {
   agent {
     enabled = true
   }
-  
-  vm_id = var.vm_id
 
   cpu {
-    cores  = var.cpu_cores
+    cores  = each.value.cpu_cores
   }
 
   memory {
-    dedicated = var.memory
+    dedicated = each.value.memory
   }
   
   disk {
     datastore_id = "local"
-    size     = var.disk_size
+    size     = each.value.disk_size
     interface = "scsi0"
     iothread = false
   }
@@ -37,8 +38,8 @@ resource "proxmox_virtual_environment_vm" "vm" {
        datastore_id         = "local"
     ip_config {
       ipv4 {
-        address = "${var.ip_address}"
-        gateway = var.gateway
+        address = "${each.value.ip_address}"
+        gateway = each.value.gateway
       }
     }
   }

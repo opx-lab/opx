@@ -1,42 +1,31 @@
-resource "proxmox_virtual_environment_firewall_options" "firewall_opts" {
-  node_name     = var.node_name
-  vm_id         = var.vm_id
-  container_id  = var.container_id
+resource "proxmox_virtual_environment_firewall_options" "vm_firewall" {
+  node_name = var.proxmox_host
+  vm_id     = var.vm_id
 
-  enabled       = var.enabled
-  dhcp          = var.dhcp
-  ipfilter      = var.ipfilter
-  macfilter     = var.macfilter
-  ndp           = var.ndp
-  input_policy  = var.input_policy
-  output_policy = var.output_policy
-  radv          = var.radv
-
-  log_level_in  = var.log_level_in
-  log_level_out = var.log_level_out
+  enabled = var.enable_firewall
 }
 
-resource "proxmox_virtual_environment_firewall_rules" "firewall" {
-  node_name    = var.node_name
-  vm_id        = var.vm_id
-  container_id = var.container_id
+resource "proxmox_virtual_environment_firewall_rules" "vm_rules" {
+  node_name = var.proxmox_host
+  vm_id     = var.vm_id
 
   dynamic "rule" {
-    for_each = var.rules
+    for_each = [for r in var.firewall_rules : r if r != null]
     content {
-      action        = rule.value.action
-      type          = rule.value.type
-      comment       = lookup(rule.value, "comment", null)
-      dest          = lookup(rule.value, "dest", null)
-      dport         = lookup(rule.value, "dport", null)
-      enabled       = lookup(rule.value, "enabled", true)
-      iface         = lookup(rule.value, "iface", null)
-      log           = lookup(rule.value, "log", null)
-      macro         = lookup(rule.value, "macro", null)
-      proto         = lookup(rule.value, "proto", null)
-      source        = lookup(rule.value, "source", null)
-      sport         = lookup(rule.value, "sport", null)
-      security_group = lookup(rule.value, "security_group", null)
+      type     = rule.value.type
+      action   = rule.value.action
+      source   = rule.value.source
+      dest     = rule.value.dest
+      macro    = rule.value.macro
+      proto    = rule.value.proto
+      dport    = rule.value.dport
+      sport    = rule.value.sport
+      enabled  = rule.value.enabled
+      log      = rule.value.log
+      comment  = rule.value.comment
+      iface    = rule.value.iface
     }
   }
 }
+
+
