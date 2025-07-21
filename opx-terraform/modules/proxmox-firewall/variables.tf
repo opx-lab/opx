@@ -10,14 +10,7 @@ variable "proxmox_host" {
   type        = string
 }
 
-variable "enable_firewall" {
-  description = "Whether to enable firewall for the VM"
-  type        = bool
-  default     = true
-}
-
 # This defines the firewall configuration for the Proxmox VM
-
 variable "firewall_rules" {
   description = "List of firewall rules"
   type = list(object({
@@ -34,6 +27,7 @@ variable "firewall_rules" {
     comment  = optional(string)
     iface    = optional(string)
     pos      = optional(number)
+  
   }))
   default = []
 }

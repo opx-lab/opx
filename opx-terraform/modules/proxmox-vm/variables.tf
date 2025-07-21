@@ -7,15 +7,29 @@ variable "template_name" {
 }
 
 variable "vms" {
-  description = "Map of virtual machines to create"
   type = map(object({
-    vm_id      = number
-    cpu_cores  = number
-    memory     = number
-    disk_size  = number
-    pxe        = bool
-    onboot     = bool
-    ip_address = string
-    gateway    = string
+    vm_id         = number
+    cpu_cores     = number
+    memory        = number
+    disk_size     = number
+    pxe           = bool
+    onboot        = bool
+    ip_address    = string
+    gateway       = string
+    firewall_rules = optional(list(object({
+      type     = string
+      action   = string
+      source   = optional(string)
+      dest     = optional(string)
+      macro    = optional(string)
+      proto    = optional(string)
+      dport    = optional(string)
+      sport    = optional(string)
+      enabled  = optional(bool, true)
+      log      = optional(string)
+      comment  = optional(string)
+      iface    = optional(string)
+      pos      = optional(number)
+    })), [])
   }))
 }
