@@ -6,6 +6,19 @@ variable "template_name" {
   default = "debian-12-cloudinit-template"
 }
 
+variable "vm_user" {
+  type        = string
+  description = "Username to create on every opx-lab VM"
+  default     = "opx"
+}
+
+variable "vm_user_password" {
+  type        = string
+  description = "Password for that user"
+  sensitive   = true
+  default     = null
+}
+
 variable "vms" {
   type = map(object({
     vm_id         = number

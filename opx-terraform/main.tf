@@ -2,6 +2,8 @@
 module "proxmox-vm" {
   source = "./modules/proxmox-vm"
   vms    = var.vms
+  vm_user = var.vm_user
+  vm_user_password = var.vm_user_password
 }
 output "all_vm_ids" {
   value = module.proxmox-vm.vm_ids

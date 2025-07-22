@@ -35,11 +35,16 @@ resource "proxmox_virtual_environment_vm" "vm" {
   }
 
     initialization {
+      user_account {
+      username = var.vm_user
+      password = var.vm_user_password
+      }
        datastore_id         = "local"
     ip_config {
       ipv4 {
         address = "${each.value.ip_address}"
         gateway = each.value.gateway
+        
       }
     }
   }

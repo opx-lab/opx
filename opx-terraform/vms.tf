@@ -1,13 +1,13 @@
 variable "vms" {
   type = map(object({
-    cpu_cores      = number
-    memory         = number
-    disk_size      = number
-    pxe            = bool
-    onboot         = bool
-    ip_address     = string
-    gateway        = string
-    vm_id          = number
+    cpu_cores       = number
+    memory          = number
+    disk_size       = number
+    pxe             = bool
+    onboot          = bool
+    ip_address      = string
+    gateway         = string
+    vm_id           = number
     enable_firewall = optional(bool, true)
     firewall_rules = optional(list(object({
       type    = string
@@ -27,7 +27,7 @@ variable "vms" {
   }))
 
   default = {
-    #### MANAGEMENT VM ####
+    # MANAGEMENT VM
     mgmt-vm = {
       vm_id      = 101
       cpu_cores  = 3
@@ -37,13 +37,14 @@ variable "vms" {
       onboot     = true
       ip_address = "192.168.55.10/24"
       gateway    = "192.168.60.10"
+
       firewall_rules = [
         {
           type    = "in"
           action  = "ACCEPT"
           proto   = "icmp"
-          comment = "Allow ICMP (ping) from internal network"
           source  = "+trusted-internal"
+          comment = "Ping from LAN"
           log     = "info"
           iface   = "net0"
           enabled = true
@@ -54,8 +55,8 @@ variable "vms" {
           action  = "ACCEPT"
           proto   = "tcp"
           dport   = "22"
-          comment = "Allow SSH from internal network"
           source  = "192.168.0.0/16"
+          comment = "SSH from internal"
           log     = "info"
           iface   = "net0"
           enabled = true
@@ -66,8 +67,8 @@ variable "vms" {
           action  = "ACCEPT"
           proto   = "tcp"
           dport   = "8006"
-          comment = "Allow Proxmox Web UI from internal network"
           source  = "192.168.0.0/16"
+          comment = "Proxmox UI from internal"
           log     = "info"
           iface   = "net0"
           enabled = true
@@ -76,7 +77,7 @@ variable "vms" {
         {
           type    = "in"
           action  = "DROP"
-          comment = "Drop all other inbound traffic"
+          comment = "Default drop inbound"
           log     = "info"
           iface   = "net0"
           enabled = true
@@ -85,7 +86,7 @@ variable "vms" {
         {
           type    = "out"
           action  = "ACCEPT"
-          comment = "Allow all outbound traffic"
+          comment = "Allow all outbound"
           iface   = "net0"
           enabled = true
           pos     = 10
@@ -93,7 +94,7 @@ variable "vms" {
       ]
     }
 
-    #### LOAD BALANCER ####
+    # LOAD BALANCER
     lb-vm = {
       vm_id      = 104
       cpu_cores  = 1
@@ -103,53 +104,73 @@ variable "vms" {
       onboot     = true
       ip_address = "192.168.60.10/24"
       gateway    = "192.168.60.10"
+
       firewall_rules = [
         {
           type    = "in"
           action  = "ACCEPT"
           proto   = "tcp"
           dport   = "80"
+          comment = "Allow HTTP"
           log     = "info"
-          comment = "Allow HTTP to LB"
+          enabled = true
+          iface   = "net0"
+          pos     = 10
         },
         {
           type    = "in"
           action  = "ACCEPT"
           proto   = "tcp"
           dport   = "443"
+          comment = "Allow HTTPS"
           log     = "info"
-          comment = "Allow HTTPS to LB"
+          enabled = true
+          iface   = "net0"
+          pos     = 20
         },
         {
           type    = "in"
           action  = "ACCEPT"
           proto   = "udp"
           dport   = "53"
-          log     = "info"
           comment = "Allow DNS queries"
+          log     = "info"
+          enabled = true
+          iface   = "net0"
+          pos     = 30
         },
         {
           type    = "in"
           action  = "ACCEPT"
           proto   = "icmp"
-          log     = "info"
           comment = "Allow ping"
+          log     = "info"
+          enabled = true
+          iface   = "net0"
+          pos     = 40
         },
         {
           type    = "in"
           action  = "DROP"
-          log     = "info"
           comment = "Drop all other inbound"
+          log     = "info"
+          enabled = true
+          iface   = "net0"
+          pos     = 99
         },
         {
           type    = "out"
           action  = "ACCEPT"
-          log     = "info"
           comment = "Allow all outbound traffic"
+          log     = "info"
+          enabled = true
+          iface   = "net0"
+          pos     = 10
         }
       ]
     }
   }
+}
 
 
   #docker
@@ -194,4 +215,4 @@ variable "vms" {
     #    ip_address="192.168.61.10/24" 
     #    gateway="192.168.60.10"
     #    }
-  }
+  
