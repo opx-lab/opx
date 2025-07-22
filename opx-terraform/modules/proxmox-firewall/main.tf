@@ -1,4 +1,5 @@
 resource "proxmox_virtual_environment_firewall_options" "vm_firewall" {
+    for_each  = local.manage_vm ? { this = var.vm_id } : {}
   node_name = var.proxmox_host
   vm_id     = var.vm_id
   enabled   = true
@@ -7,6 +8,7 @@ resource "proxmox_virtual_environment_firewall_options" "vm_firewall" {
 
 resource "proxmox_virtual_environment_firewall_rules" "vm_rules" {
   node_name = var.proxmox_host
+  count     = var.vm_id != null ? 1 : 0
   vm_id     = var.vm_id
 
 dynamic "rule" {
@@ -18,6 +20,7 @@ dynamic "rule" {
       enabled = true
     }
   ]
+  
   content {
     type    = rule.value.type
     action  = rule.value.action
@@ -34,5 +37,4 @@ dynamic "rule" {
   }
 }
 }
-
 

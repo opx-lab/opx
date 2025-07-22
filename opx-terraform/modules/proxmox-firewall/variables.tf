@@ -5,9 +5,20 @@ variable "vm_id" {
   type        = number
 }
 
+variable "name" {
+  description = "ipset address"
+  type       = string
+ 
+}
+
 variable "proxmox_host" {
   description = "Proxmox node name"
   type        = string
+}
+
+variable "create_aliases" {
+  type    = bool
+  default = false
 }
 
 # This defines the firewall configuration for the Proxmox VM
@@ -30,4 +41,9 @@ variable "firewall_rules" {
   
   }))
   default = []
+}
+
+variable "internet_cidrs" {
+  type    = list(string)
+  default = ["0.0.0.0/1", "128.0.0.0/1"] # override in root if you like
 }

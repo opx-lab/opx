@@ -4,7 +4,6 @@ terraform {
   # Proxmox provider for managing Proxmox VE resources
     proxmox = {
       source = "bpg/proxmox"
-      #version = "3.0.2-rc01"
     }
   }
 }

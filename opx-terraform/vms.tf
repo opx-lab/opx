@@ -43,7 +43,7 @@ variable "vms" {
           action  = "ACCEPT"
           proto   = "icmp"
           comment = "Allow ICMP (ping) from internal network"
-          source  = "192.168.0.0/16"
+          source  = "+trusted-internal"
           log     = "info"
           iface   = "net0"
           enabled = true
