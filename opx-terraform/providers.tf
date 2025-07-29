@@ -1,5 +1,14 @@
 terraform {
+  cloud {
+    organization = "opx-lab"       # plain ASCII hyphen
+    workspaces {
+      name = "opx-workspace"
+    }
+  }
+
   required_version = ">= 1.1.0"
+
+
   required_providers {
   # Proxmox provider for managing Proxmox VE resources
     proxmox = {
