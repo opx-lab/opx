@@ -102,7 +102,7 @@ variable "vms" {
       disk_size  = 10
       pxe        = false
       onboot     = true
-      ip_address = "192.168.60.10/24"
+      ip_address = "192.168.1.60/24"
       gateway    = "192.168.1.50"
       enable_firewall = false
       firewall_rules = []  ### Empty, handled by opx-pc (proxmox host)

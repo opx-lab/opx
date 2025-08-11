@@ -35,7 +35,7 @@ resource "proxmox_virtual_environment_vm" "vm" {
   content {
     bridge   = "vmbr0"
     model    = "virtio"
-    firewall = false
+    firewall = each.key != "lb-vm"
   }
 }
 
