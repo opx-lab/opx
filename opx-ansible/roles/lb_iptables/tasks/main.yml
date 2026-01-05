@@ -1,0 +1,30 @@
+- name: Install iptables persistence
+  ansible.builtin.apt:
+    name:
+      - iptables
+      - iptables-persistent
+      - netfilter-persistent
+    state: present
+    update_cache: true
+
+- name: Enable IPv4 forwarding
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    state: present
+    reload: true
+
+- name: Deploy IPv4 iptables rules
+  ansible.builtin.template:
+    src: rules.v4.j2
+    dest: /etc/iptables/rules.v4
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload netfilter rules
+
+- name: Ensure netfilter-persistent is enabled and started
+  ansible.builtin.systemd:
+    name: netfilter-persistent
+    enabled: true
+    state: started
