@@ -1,0 +1,2 @@
+- name: Reload netfilter rules
+  ansible.builtin.command: netfilter-persistent reload

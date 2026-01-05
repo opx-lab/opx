@@ -1,0 +1,9 @@
+ansible_user: opx
+
+lb_wan_if: eth0
+lb_lan_if: ens19
+mgmt_subnet_cidr: 192.168.55.0/24
+
+# host routes you currently allow explicitly (from iptables-save)
+opx_pc_ip: 192.168.1.50
+mgmt_vm_ip: 192.168.55.10

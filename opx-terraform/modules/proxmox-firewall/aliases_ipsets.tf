@@ -17,6 +17,10 @@ resource "proxmox_virtual_environment_firewall_ipset" "trusted_internal" {
     name    = "192.168.61.0/24"
     comment = "trusted LAN 3"
   }
+   cidr {
+    name    = "192.168.1.0/24"
+    comment = "trusted LAN 4"
+  }
 }
 
 # IP Set: dns-servers with multiple IP entries

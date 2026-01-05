@@ -102,72 +102,11 @@ variable "vms" {
       disk_size  = 10
       pxe        = false
       onboot     = true
-      ip_address = "192.168.60.10/24"
-      gateway    = "192.168.60.10"
-
-      firewall_rules = [
-        {
-          type    = "in"
-          action  = "ACCEPT"
-          proto   = "tcp"
-          dport   = "80"
-          comment = "Allow HTTP"
-          log     = "info"
-          enabled = true
-          iface   = "net0"
-          pos     = 10
-        },
-        {
-          type    = "in"
-          action  = "ACCEPT"
-          proto   = "tcp"
-          dport   = "443"
-          comment = "Allow HTTPS"
-          log     = "info"
-          enabled = true
-          iface   = "net0"
-          pos     = 20
-        },
-        {
-          type    = "in"
-          action  = "ACCEPT"
-          proto   = "udp"
-          dport   = "53"
-          comment = "Allow DNS queries"
-          log     = "info"
-          enabled = true
-          iface   = "net0"
-          pos     = 30
-        },
-        {
-          type    = "in"
-          action  = "ACCEPT"
-          proto   = "icmp"
-          comment = "Allow ping"
-          log     = "info"
-          enabled = true
-          iface   = "net0"
-          pos     = 40
-        },
-        {
-          type    = "in"
-          action  = "DROP"
-          comment = "Drop all other inbound"
-          log     = "info"
-          enabled = true
-          iface   = "net0"
-          pos     = 99
-        },
-        {
-          type    = "out"
-          action  = "ACCEPT"
-          comment = "Allow all outbound traffic"
-          log     = "info"
-          enabled = true
-          iface   = "net0"
-          pos     = 10
-        }
-      ]
+      ip_address = "192.168.1.60/24"
+      gateway    = "192.168.1.50"
+      enable_firewall = false
+      firewall_rules = []  ### Empty, handled by opx-pc (proxmox host)
+      
     }
   }
 }

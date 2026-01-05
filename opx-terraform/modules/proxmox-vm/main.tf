@@ -30,9 +30,14 @@ resource "proxmox_virtual_environment_vm" "vm" {
 
   serial_device {}
   
-  network_device {
-    bridge = "vmbr0"
+  dynamic "network_device" {
+  for_each = each.key == "lb-vm" ? [1, 2] : [1]
+  content {
+    bridge   = "vmbr0"
+    model    = "virtio"
+    firewall = each.key != "lb-vm"
   }
+}
 
     initialization {
       user_account {
