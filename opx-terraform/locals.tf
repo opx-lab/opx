@@ -1,5 +1,5 @@
 locals {
-  default_node     = "opx-pc"
+  default_node = "opx-pc"
 }
 
 locals {

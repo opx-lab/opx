@@ -7,8 +7,8 @@ variable "vm_id" {
 
 variable "name" {
   description = "ipset address"
-  type       = string
- 
+  type        = string
+
 }
 
 variable "proxmox_host" {
@@ -25,20 +25,20 @@ variable "create_aliases" {
 variable "firewall_rules" {
   description = "List of firewall rules"
   type = list(object({
-    type     = string
-    action   = string
-    source   = optional(string)
-    dest     = optional(string)
-    macro    = optional(string)
-    proto    = optional(string)
-    dport    = optional(string)
-    sport    = optional(string)
-    enabled  = optional(bool, true)
-    log      = optional(string)
-    comment  = optional(string)
-    iface    = optional(string)
-    pos      = optional(number)
-  
+    type    = string
+    action  = string
+    source  = optional(string)
+    dest    = optional(string)
+    macro   = optional(string)
+    proto   = optional(string)
+    dport   = optional(string)
+    sport   = optional(string)
+    enabled = optional(bool, true)
+    log     = optional(string)
+    comment = optional(string)
+    iface   = optional(string)
+    pos     = optional(number)
+
   }))
   default = []
 }

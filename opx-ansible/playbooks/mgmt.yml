@@ -1,0 +1,5 @@
+- name: Configure mgmt-vm baseline network settings
+  hosts: mgmt
+  become: true
+  roles:
+    - mgmt_net

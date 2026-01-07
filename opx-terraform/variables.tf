@@ -11,7 +11,10 @@ variable "pm_password" {
   sensitive   = true
 }
 
-
+variable "target_node" {
+  type        = string
+  description = "Proxmox node name"
+}
 
 variable "vm_user" {
   type        = string
@@ -19,7 +22,18 @@ variable "vm_user" {
   default     = "opx"
 }
 
-variable "vm_user_password" {
-  type        = string
-  description = "Password for that user"
+# PRZETESTOWAC SSH
+# variable "vm_user_password" {
+#   type        = string
+#   description = "Password for that user"
+# }
+
+variable "ssh_public_keys" {
+  type        = list(string)
+  description = "SSH public keys injected via cloud-init"
+}
+
+variable "template_vmid" {
+  type        = number
+  description = "VMID of golden Debian cloud-init template"
 }

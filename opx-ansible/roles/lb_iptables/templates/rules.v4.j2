@@ -7,7 +7,6 @@
 
 -A FORWARD -i {{ lb_lan_if }} -o {{ lb_wan_if }} -j ACCEPT
 -A FORWARD -i {{ lb_wan_if }} -o {{ lb_lan_if }} -m state --state RELATED,ESTABLISHED -j ACCEPT
-
 -A FORWARD -s {{ opx_pc_ip }}/32 -d {{ mgmt_vm_ip }}/32 -i {{ lb_wan_if }} -o {{ lb_lan_if }} -p icmp -j ACCEPT
 -A FORWARD -s {{ opx_pc_ip }}/32 -d {{ mgmt_vm_ip }}/32 -i {{ lb_wan_if }} -o {{ lb_lan_if }} -p tcp -m tcp --dport 22 -j ACCEPT
 -A FORWARD -s {{ mgmt_vm_ip }}/32 -d {{ opx_pc_ip }}/32 -i {{ lb_lan_if }} -o {{ lb_wan_if }} -j ACCEPT

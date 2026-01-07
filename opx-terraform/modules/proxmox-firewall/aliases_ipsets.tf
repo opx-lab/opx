@@ -1,10 +1,10 @@
 
 # IP Sets
 resource "proxmox_virtual_environment_firewall_ipset" "trusted_internal" {
-  count     = local.make_aliases ? 1 : 0
-  name      = "trusted-internal"
-  comment   = "Trusted internal networks"
- cidr {
+  count   = local.make_aliases ? 1 : 0
+  name    = "trusted-internal"
+  comment = "Trusted internal networks"
+  cidr {
     name    = "192.168.55.0/24"
     comment = "trusted LAN 1"
   }
@@ -17,7 +17,7 @@ resource "proxmox_virtual_environment_firewall_ipset" "trusted_internal" {
     name    = "192.168.61.0/24"
     comment = "trusted LAN 3"
   }
-   cidr {
+  cidr {
     name    = "192.168.1.0/24"
     comment = "trusted LAN 4"
   }
@@ -40,7 +40,7 @@ resource "proxmox_virtual_environment_firewall_ipset" "dns_servers" {
 
 # IP Set: internet covering all IPs
 resource "proxmox_virtual_environment_firewall_ipset" "int" {
-  count     = local.make_aliases ? 1 : 0
+  count   = local.make_aliases ? 1 : 0
   name    = "internet"
   comment = "All internet addresses"
   dynamic "cidr" {

@@ -1,0 +1,6 @@
+- name: Baseline for all VMs
+  hosts: all
+  become: true
+  roles:
+    - base_serial_console
+
