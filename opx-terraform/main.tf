@@ -44,3 +44,13 @@ module "proxmox-firewall" {
 
   depends_on = [module.proxmox_firewall_aliases]
 }
+
+resource "null_resource" "refresh_known_hosts" {
+  triggers = {
+    always = timestamp()
+  }
+
+  provisioner "local-exec" {
+    command = "${pathexpand("~")}/opx-lab/scripts/opx-ssh-refresh.sh"
+  }
+}

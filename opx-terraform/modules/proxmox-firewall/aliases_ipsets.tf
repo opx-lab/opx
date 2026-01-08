@@ -55,7 +55,7 @@ resource "proxmox_virtual_environment_firewall_ipset" "int" {
 ### Aliases ###
 resource "proxmox_virtual_environment_firewall_alias" "management" {
   count     = local.make_aliases ? 1 : 0
-  node_name = var.proxmox_host
+ # node_name = var.proxmox_host
   name      = "management"
   cidr      = "192.168.55.10"
   comment   = "Management VM IP"
@@ -63,7 +63,7 @@ resource "proxmox_virtual_environment_firewall_alias" "management" {
 
 resource "proxmox_virtual_environment_firewall_alias" "loadbalancer" {
   count     = local.make_aliases ? 1 : 0
-  node_name = var.proxmox_host
+#  node_name = var.proxmox_host
   name      = "loadbalancer"
   cidr      = "192.168.60.10"
   comment   = "Load balancer VM IP"
