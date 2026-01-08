@@ -93,8 +93,26 @@ variable "vms" {
         }
       ]
     }
-
-    # LOAD BALANCER
+    monitor-vm = {
+      vm_id      = 102
+      cpu_cores  = 2
+      memory     = 2048
+      disk_size  = 15
+      pxe        = false
+      onboot     = true
+      ip_address = "192.168.55.20/24"
+      gateway    = "192.168.55.2"
+    }
+    docker-host = {
+      vm_id      = 103
+      cpu_cores  = 2
+      memory     = 2048
+      disk_size  = 15
+      pxe        = false
+      onboot     = true
+      ip_address = "192.168.55.30/24"
+      gateway    = "192.168.55.2"
+    }
     lb-vm = {
       vm_id           = 104
       cpu_cores       = 1
@@ -105,8 +123,36 @@ variable "vms" {
       ip_address      = "192.168.1.60/24"
       gateway         = "192.168.1.50"
       enable_firewall = false
-      firewall_rules  = [] ### Empty, handled by opx-pc (proxmox host)
-
+    }
+    k8smaster-vm = {
+      vm_id      = 105
+      cpu_cores  = 2
+      memory     = 2048
+      disk_size  = 30
+      pxe        = false
+      onboot     = true
+      ip_address = "192.168.55.40/24"
+      gateway    = "192.168.55.2"
+    }
+    k8sworker-vm = {
+      vm_id      = 106
+      cpu_cores  = 2
+      memory     = 2048
+      disk_size  = 30
+      pxe        = false
+      onboot     = true
+      ip_address = "192.168.55.50/24"
+      gateway    = "192.168.55.2"
+    }
+    db-vm = {
+      vm_id      = 107
+      cpu_cores  = 2
+      memory     = 4096
+      disk_size  = 50
+      pxe        = false
+      onboot     = true
+      ip_address = "192.168.55.60/24"
+      gateway    = "192.168.55.2"
     }
   }
 }
