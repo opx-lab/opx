@@ -13,7 +13,7 @@
     value: "1"
     state: present
     reload: true
-
+    
 - name: Deploy IPv4 iptables rules
   ansible.builtin.template:
     src: rules.v4.j2
