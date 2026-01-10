@@ -14,11 +14,13 @@ write_files:
     content: |
       opx ALL=(ALL:ALL) NOPASSWD:ALL
 
+%{ if enable_apt_proxy ~}
   - path: /etc/apt/apt.conf.d/01proxy
     owner: root:root
     permissions: '0644'
     content: |
       Acquire::http::Proxy "http://192.168.1.50:3142";
+%{ endif ~}
 
   - path: /home/${username}/.ssh/authorized_keys
     owner: ${username}:${username}
@@ -32,4 +34,4 @@ runcmd:
   - [ bash, -lc, "chown -R ${username}:${username} /home/${username}/.ssh" ]
   - [ bash, -lc, "systemctl restart ssh || true" ]
 
-final_message: "cloud-init finished: apt proxy + ssh keys enforced"
+final_message: "cloud-init finished: ssh keys enforced"

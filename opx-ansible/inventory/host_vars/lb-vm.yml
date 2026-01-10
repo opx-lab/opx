@@ -1,7 +1,7 @@
 ansible_user: opx
 
 lb_wan_if: eth0
-lb_lan_if: ens19
+lb_lan_if: eth1
 mgmt_subnet_cidr: 192.168.55.0/24
 
 # host routes you currently allow explicitly (from iptables-save)

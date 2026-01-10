@@ -4,24 +4,18 @@ resource "proxmox_virtual_environment_firewall_ipset" "trusted_internal" {
   count   = local.make_aliases ? 1 : 0
   name    = "trusted-internal"
   comment = "Trusted internal networks"
+
   cidr {
     name    = "192.168.55.0/24"
-    comment = "trusted LAN 1"
+    comment = "opx-lab internal"
   }
 
   cidr {
-    name    = "192.168.60.0/24"
-    comment = "trusted LAN 2"
-  }
-  cidr {
-    name    = "192.168.61.0/24"
-    comment = "trusted LAN 3"
-  }
-  cidr {
     name    = "192.168.1.0/24"
-    comment = "trusted LAN 4"
+    comment = "home LAN / upstream"
   }
 }
+
 
 # IP Set: dns-servers with multiple IP entries
 resource "proxmox_virtual_environment_firewall_ipset" "dns_servers" {
@@ -53,6 +47,24 @@ resource "proxmox_virtual_environment_firewall_ipset" "int" {
 
 
 ### Aliases ###
+
+### LOAD BALANCER VM ###
+resource "proxmox_virtual_environment_firewall_alias" "lb_wan" {
+  count   = local.make_aliases ? 1 : 0
+  name    = "lb-wan"
+  cidr    = "192.168.1.60"
+  comment = "LB WAN IP"
+}
+
+resource "proxmox_virtual_environment_firewall_alias" "lb_lan" {
+  count   = local.make_aliases ? 1 : 0
+  name    = "lb-lan"
+  cidr    = "192.168.55.2"
+  comment = "LB LAN gateway IP"
+}
+
+#############################
+
 resource "proxmox_virtual_environment_firewall_alias" "management" {
   count     = local.make_aliases ? 1 : 0
  # node_name = var.proxmox_host
@@ -60,12 +72,3 @@ resource "proxmox_virtual_environment_firewall_alias" "management" {
   cidr      = "192.168.55.10"
   comment   = "Management VM IP"
 }
-
-resource "proxmox_virtual_environment_firewall_alias" "loadbalancer" {
-  count     = local.make_aliases ? 1 : 0
-#  node_name = var.proxmox_host
-  name      = "loadbalancer"
-  cidr      = "192.168.60.10"
-  comment   = "Load balancer VM IP"
-}
-

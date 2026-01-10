@@ -84,7 +84,7 @@ resource "proxmox_virtual_environment_file" "user_data" {
       username        = var.vm_user
       ssh_public_keys = var.ssh_public_keys
       hostname        = each.key
-      
+      enable_apt_proxy = each.key != "lb-vm"
     })
   }
 }
