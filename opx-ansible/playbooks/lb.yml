@@ -2,4 +2,5 @@
   hosts: lb
   become: true
   roles:
+    - common
     - lb/lb_iptables

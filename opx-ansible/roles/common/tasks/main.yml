@@ -1,52 +1,121 @@
-- name: Ensure apt cache is updated
-  apt:
-    update_cache: yes
-    force_apt_get: yes
+# =========================
+# APT proxy (must be FIRST)
+# =========================
+
+- name: Ensure /etc/apt/apt.conf.d exists
+  ansible.builtin.file:
+    path: /etc/apt/apt.conf.d
+    state: directory
+    mode: "0755"
+
+- name: Configure APT proxy (HTTP only)
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/01proxy
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      Acquire::http::Proxy "{{ apt_proxy_url }}";
+      Acquire::https::Proxy "false";
+
+# =========================
+# Kill apt locks deterministically
+# =========================
+
+- name: Stop unattended-upgrades
+  ansible.builtin.systemd:
+    name: unattended-upgrades
+    state: stopped
+    enabled: false
+    masked: true
+  failed_when: false
+
+- name: Stop apt-daily timers
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: stopped
+    enabled: false
+    masked: true
+  loop:
+    - apt-daily.service
+    - apt-daily.timer
+    - apt-daily-upgrade.service
+    - apt-daily-upgrade.timer
+  failed_when: false
+
+- name: Remove APT/DPKG lock files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /var/lib/dpkg/lock-frontend
+    - /var/lib/dpkg/lock
+    - /var/cache/apt/archives/lock
+    - /var/lib/apt/lists/lock
+
+- name: Recover dpkg database if needed
+  ansible.builtin.command: dpkg --configure -a
+  changed_when: false
+  failed_when: false
+
+# =========================
+# Safe apt baseline
+# =========================
+
+- name: Update apt cache (through proxy)
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+# - name: Ensure apt cache is updated
+#   apt:
+#     update_cache: yes
+#     force_apt_get: yes
   
 
-- name: Upgrade all packages to latest
-  apt:
-    upgrade: dist
+# - name: Upgrade all packages to latest
+#   apt:
+#     upgrade: dist
 
-- name: Install essential tools
-  apt:
-    name:
-      - net-tools
-      - iproute2
-      - htop
-      - lsof
-      - tcpdump
-      - du
-      - tree
-      - vim
-      - less
-      - jq
-      - curl
-      - wget
-      - rsync
-      - gnupg
-      - ca-certificates
-      - rsyslog
-      - systemd
-      - zip
-      - unzip
-      - traceroute
-      - lsblk
-      - ntpdate
-      - dstat
-      - sysstat
-      - cron
-      - git
-      - python3
-      - python3-pip
-    state: present
+# - name: Install essential tools
+#   apt:
+#     name:
+#       - net-tools
+#       - iproute2
+#       - htop
+#       - lsof
+#       - tcpdump
+#       - du
+#       - tree
+#       - vim
+#       - less
+#       - jq
+#       - curl
+#       - wget
+#       - rsync
+#       - gnupg
+#       - ca-certificates
+#       - rsyslog
+#       - systemd
+#       - zip
+#       - unzip
+#       - traceroute
+#       - lsblk
+#       - ntpdate
+#       - dstat
+#       - sysstat
+#       - cron
+#       - git
+#       - python3
+#       - python3-pip
+#     state: present
 
-- name: Set system timezone to Europe/Warsaw
-  timezone:
-    name: Europe/Warsaw
+# - name: Set system timezone to Europe/Warsaw
+#   timezone:
+#     name: Europe/Warsaw
 
-- name: Ensure rsyslog is enabled and running
-  service:
-    name: rsyslog
-    state: started
-    enabled: yes
+# - name: Ensure rsyslog is enabled and running
+#   service:
+#     name: rsyslog
+#     state: started
+#     enabled: yes
