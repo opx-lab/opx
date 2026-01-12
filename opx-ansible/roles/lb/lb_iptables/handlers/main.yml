@@ -1,5 +1,7 @@
 - name: Reload netfilter rules
-  ansible.builtin.command: iptables-restore < /etc/iptables/rules.v4
+  ansible.builtin.shell: iptables-restore < /etc/iptables/rules.v4
+  args:
+    executable: /bin/bash
   changed_when: true
 
 - name: Save netfilter rules
