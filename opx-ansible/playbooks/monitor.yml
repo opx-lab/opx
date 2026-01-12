@@ -1,0 +1,4 @@
+- hosts: monitor-vm
+  become: yes
+  roles:
+    - common

@@ -1,6 +1,18 @@
-- name: Baseline for all VMs
+- name: Apply common configuration to all VMs
   hosts: all
+  become: yes
+
+  roles:
+    - common
+
+- hosts: all
   become: true
   roles:
-    - base_serial_console
-
+    - common
+    - { role: lb/lb_iptables, when: "'lb' in group_names" }
+    - { role: mgmt_net, when: "'mgmt' in group_names" }
+    - db
+    - docker
+    - monitor
+    - k8s_master
+    - k8s_worker

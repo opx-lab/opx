@@ -1,0 +1,52 @@
+- name: Ensure apt cache is updated
+  apt:
+    update_cache: yes
+    force_apt_get: yes
+  
+
+- name: Upgrade all packages to latest
+  apt:
+    upgrade: dist
+
+- name: Install essential tools
+  apt:
+    name:
+      - net-tools
+      - iproute2
+      - htop
+      - lsof
+      - tcpdump
+      - du
+      - tree
+      - vim
+      - less
+      - jq
+      - curl
+      - wget
+      - rsync
+      - gnupg
+      - ca-certificates
+      - rsyslog
+      - systemd
+      - zip
+      - unzip
+      - traceroute
+      - lsblk
+      - ntpdate
+      - dstat
+      - sysstat
+      - cron
+      - git
+      - python3
+      - python3-pip
+    state: present
+
+- name: Set system timezone to Europe/Warsaw
+  timezone:
+    name: Europe/Warsaw
+
+- name: Ensure rsyslog is enabled and running
+  service:
+    name: rsyslog
+    state: started
+    enabled: yes

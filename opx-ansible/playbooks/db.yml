@@ -1,0 +1,4 @@
+- hosts: db-vm
+  become: yes
+  roles:
+    - common

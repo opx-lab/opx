@@ -1,0 +1,3 @@
+# host_vars/db-vm.yml
+ansible_host: 192.168.55.60
+ansible_user: opx

@@ -1,6 +1,0 @@
-# For Proxmox VE environments, enable serial console on ttyS0
-- name: Enable and start serial getty on ttyS0 (xterm.js)
-  ansible.builtin.systemd:
-    name: serial-getty@ttyS0.service
-    enabled: true
-    state: started

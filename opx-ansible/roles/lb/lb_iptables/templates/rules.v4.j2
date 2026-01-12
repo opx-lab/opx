@@ -1,0 +1,45 @@
+*filter
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT ACCEPT [0:0]
+
+# --- INPUT (lb-vm itself) ---
+
+# allow loopback
+-A INPUT -i lo -j ACCEPT
+
+# allow established
+-A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+# allow ICMP (ping)
+-A INPUT -p icmp -j ACCEPT
+
+# allow SSH from LAN (opx-pc)
+-A INPUT -p tcp --dport 22 -s 192.168.1.0/24 -j ACCEPT
+
+# --- FORWARD (routing) ---
+
+# allow established forwarding
+-A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+# allow all VMs to talk to each other
+-A FORWARD -i eth1 -o eth1 -s 192.168.55.0/24 -d 192.168.55.0/24 -j ACCEPT
+
+# allow all VMs to reach opx-pc apt-cacher-ng
+-A FORWARD -i eth1 -o eth0 -s 192.168.55.0/24 -d 192.168.1.50 -p tcp --dport 3142 -j ACCEPT
+
+# allow ONLY mgmt-vm to reach the Internet
+-A FORWARD -i eth1 -o eth0 -s 192.168.55.10/32 -j ACCEPT
+
+COMMIT
+
+*nat
+:PREROUTING ACCEPT [0:0]
+:INPUT ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+
+# NAT ONLY mgmt-vm
+-A POSTROUTING -o eth0 -s 192.168.55.10/32 -j MASQUERADE
+
+COMMIT

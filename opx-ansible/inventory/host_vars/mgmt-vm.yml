@@ -1,5 +1,5 @@
-mgmt_if: eth0
-mgmt_ip: 192.168.55.10
-mgmt_gateway: 192.168.55.2
+# host_vars/mgmt-vm.yml
+ansible_host: 192.168.55.10
+ansible_user: opx
 
 apt_proxy: "http://192.168.1.50:3142"

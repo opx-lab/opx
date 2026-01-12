@@ -2,4 +2,4 @@
   hosts: lb
   become: true
   roles:
-    - lb_iptables
+    - lb/lb_iptables
