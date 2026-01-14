@@ -1,0 +1,19 @@
+---
+- name: Update apt cache (retry; show error)
+  block:
+    - ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      register: apt_update
+      retries: 10
+      delay: 6
+      until: apt_update is succeeded
+  rescue:
+    - ansible.builtin.debug:
+        var: apt_update
+    - ansible.builtin.fail:
+        msg: >
+          apt update failed.
+          stdout={{ apt_update.stdout | default('') }}
+          stderr={{ apt_update.stderr | default('') }}
+          msg={{ apt_update.msg | default('') }}

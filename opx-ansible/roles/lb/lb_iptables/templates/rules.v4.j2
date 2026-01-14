@@ -31,6 +31,11 @@
 # allow ONLY mgmt-vm to reach the Internet
 -A FORWARD -i eth1 -o eth0 -s 192.168.55.10/32 -j ACCEPT
 
+# allow opx-pc to SSH into mgmt subnet
+-A FORWARD -i eth0 -o eth1 -s 192.168.1.50/32 -d 192.168.55.0/24 -p tcp --dport 22 -j ACCEPT
+-A FORWARD -i eth1 -o eth0 -s 192.168.55.0/24 -d 192.168.1.50/32 -p tcp --sport 22 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+
+
 COMMIT
 
 *nat
@@ -43,3 +48,4 @@ COMMIT
 -A POSTROUTING -o eth0 -s 192.168.55.10/32 -j MASQUERADE
 
 COMMIT
+

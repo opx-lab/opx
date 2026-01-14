@@ -1,0 +1,11 @@
+---
+- name: Configure APT sources.list
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      deb {{ apt_http_mirror }} bookworm main contrib non-free non-free-firmware
+      deb {{ apt_http_mirror }} bookworm-updates main contrib non-free non-free-firmware
+      deb {{ apt_security_mirror }} bookworm-security main contrib non-free non-free-firmware

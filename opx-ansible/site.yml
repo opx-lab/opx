@@ -1,0 +1,11 @@
+# 1) Bootstrap load balancer FIRST
+- name: Bootstrap lb-vm first
+  hosts: lb
+  become: true
+  roles:
+    - lb/lb_iptables
+
+# 2) Baseline for all VMs
+- name: Baseline all VMs
+  hosts: all
+  become: true

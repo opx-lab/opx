@@ -1,6 +1,5 @@
-- name: Configure lb-vm NAT gateway (iptables)
+- name: Bootstrap lb-vm first (NAT + NTP + apt bootstrap)
   hosts: lb
   become: true
   roles:
-    - common
     - lb/lb_iptables

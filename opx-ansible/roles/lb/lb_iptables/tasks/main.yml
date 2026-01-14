@@ -1,3 +1,103 @@
+---
+# =========================
+# APT bootstrap (must be FIRST for deterministic apt)
+# =========================
+- name: Ensure /etc/apt/apt.conf.d exists
+  ansible.builtin.file:
+    path: /etc/apt/apt.conf.d
+    state: directory
+    mode: "0755"
+
+- name: Configure APT proxy (HTTP only)
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/01proxy
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      Acquire::http::Proxy "http://192.168.1.50:3142";
+      Acquire::https::Proxy "false";
+
+- name: Bypass APT proxy for Debian Security repo
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/02noproxy-security
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      Acquire::http::Proxy::security.debian.org "DIRECT";
+
+- name: Configure APT sources.list (HTTP)
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware
+      deb http://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware
+      deb http://security.debian.org bookworm-security main contrib non-free non-free-firmware
+
+# =========================
+# Time sync (chrony)
+# lb-vm: upstream opx-pc, serve mgmt subnet
+# =========================
+- name: Install chrony
+  ansible.builtin.apt:
+    name: chrony
+    state: present
+    update_cache: true
+  register: _apt_chrony
+  retries: 10
+  delay: 6
+  until: _apt_chrony is succeeded
+
+- name: Configure chrony (lb-vm upstream opx-pc, serve mgmt subnet)
+  ansible.builtin.copy:
+    dest: /etc/chrony/chrony.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      confdir /etc/chrony/conf.d
+
+      server 192.168.1.50 iburst
+      makestep 1.0 3
+      allow 192.168.55.0/24
+
+      sourcedir /run/chrony-dhcp
+      sourcedir /etc/chrony/sources.d
+
+      keyfile /etc/chrony/chrony.keys
+      driftfile /var/lib/chrony/chrony.drift
+      ntsdumpdir /var/lib/chrony
+      logdir /var/log/chrony
+
+      maxupdateskew 100.0
+      rtcsync
+      leapsectz right/UTC
+  notify:
+    - restart chrony
+
+- name: Ensure chrony is enabled and started
+  ansible.builtin.systemd:
+    name: chrony
+    enabled: true
+    state: started
+
+- name: Wait for chrony sync
+  ansible.builtin.command: chronyc tracking
+  register: _chrony_tracking
+  retries: 20
+  delay: 3
+  until:
+    - _chrony_tracking.stdout is search("Leap status")
+    - _chrony_tracking.stdout is search("Normal")
+  changed_when: false
+
+# =========================
+# Routing/NAT dependencies
+# =========================
 - name: Install iptables persistence + procps (sysctl)
   ansible.builtin.apt:
     name:
@@ -6,7 +106,7 @@
       - netfilter-persistent
       - procps
     state: present
-    update_cache: true
+    update_cache: false
 
 - name: Prevent ARP flux (two NICs on same bridge)
   ansible.builtin.copy:
@@ -35,6 +135,9 @@
     state: present
     reload: true
 
+# =========================
+# iptables rules
+# =========================
 - name: Deploy IPv4 iptables rules
   ansible.builtin.template:
     src: rules.v4.j2
@@ -42,11 +145,13 @@
     owner: root
     group: root
     mode: "0644"
+  register: rules_v4
 
 - name: Apply iptables rules (atomic)
   ansible.builtin.shell: iptables-restore < /etc/iptables/rules.v4
   args:
     executable: /bin/bash
+  when: rules_v4.changed
   changed_when: true
 
 - name: Ensure netfilter-persistent is enabled and started
@@ -54,7 +159,3 @@
     name: netfilter-persistent
     enabled: true
     state: started
-
-- name: Save rules for persistence
-  ansible.builtin.command: netfilter-persistent save
-  changed_when: true

@@ -1,2 +1,38 @@
----
+# =========================
+# APT proxy (apt-cacher-ng)
+# =========================
 apt_proxy_url: "http://192.168.1.50:3142"
+
+# =========================
+# APT mirrors (HTTP only)
+# =========================
+apt_http_mirror: "http://deb.debian.org/debian"
+apt_security_mirror: "http://security.debian.org"
+
+# =========================
+# Base packages for all VMs
+# =========================
+common_packages:
+  - ca-certificates
+  - curl
+  - wget
+  - vim
+  - git
+  - htop
+  - net-tools
+  - tcpdump
+  - gnupg
+  - lsb-release
+
+# =========================
+# System basics
+# =========================
+common_timezone: "Europe/Warsaw"
+
+# =========================
+# Sysctl baseline (safe defaults)
+# =========================
+common_sysctl:
+  net.ipv4.ip_forward: 0
+  net.ipv4.conf.all.rp_filter: 1
+  net.ipv4.conf.default.rp_filter: 1
