@@ -1,13 +1,8 @@
 ---
-common_timezone: Europe/Warsaw
-
-apt_proxy_url: "http://192.168.1.50:3142"
-apt_http_mirror: "http://deb.debian.org/debian"
-apt_security_mirror: "http://security.debian.org"
-
-# Chrony NTP servers:
-chrony_upstream_lb: "192.168.1.50"   # lb-vm syncs from opx-pc
-chrony_upstream_vm: "192.168.55.2"   # all other VMs sync from lb-vm
-
-common_packages: []
-common_sysctl: {}
+- import_tasks: 00_timezone.yml
+- import_tasks: 10_apt_proxy.yml
+- import_tasks: 20_apt_sources.yml
+- import_tasks: 30_chrony.yml
+- import_tasks: 40_apt_baseline.yml
+- import_tasks: 50_packages.yml
+- import_tasks: 60_sysctl.yml

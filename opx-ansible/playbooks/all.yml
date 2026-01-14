@@ -1,23 +1,23 @@
-# =========================
-# 1) Load balancer bootstrap (iptables / routing)
-# =========================
-- name: Load Balancer base network setup
-  hosts: lb
-  become: true
-  roles:
-    - lb/lb_iptables
+# # =========================
+# # 1) Load balancer bootstrap (iptables / routing)
+# # =========================
+# - name: Load Balancer base network setup
+#   hosts: lb
+#   become: true
+#   roles:
+#     - lb/lb_iptables
 
-# =========================
-# 2) Common + role-specific config for all VMs
-# =========================
-- hosts: all
-  become: true
-  roles:
-    - common
-    - { role: lb/lb_iptables, when: "'lb' in group_names" }
-    - mgmt
-    - db
-    - docker
-    - monitor
-    - k8s_master
-    - k8s_worker
+# # =========================
+# # 2) Common + role-specific config for all VMs
+# # =========================
+# - hosts: all
+#   become: true
+#   roles:
+#     - common
+#     - { role: lb/lb_iptables, when: "'lb' in group_names" }
+#     - mgmt
+#     - db
+#     - docker
+#     - monitor
+#     - k8s_master
+#     - k8s_worker

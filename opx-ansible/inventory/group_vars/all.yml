@@ -1,1 +1,9 @@
 apt_proxy_url: "http://192.168.1.50:3142"
+
+# Jump through lb-vm for all 192.168.55.x hosts
+# ansible_ssh_common_args: >-
+#   -o ProxyJump=opx@192.168.1.60
+#   -o ServerAliveInterval=30
+#   -o ServerAliveCountMax=3
+#   -o StrictHostKeyChecking=no
+#   -o UserKnownHostsFile=/dev/null

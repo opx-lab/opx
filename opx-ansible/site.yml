@@ -1,11 +1,21 @@
-# 1) Bootstrap load balancer FIRST
-- name: Bootstrap lb-vm first
+---
+# 1) Configure lb-vm locally first (no dependency on other VMs)
+- name: Bootstrap lb-vm
   hosts: lb
   become: true
   roles:
+    - common
     - lb/lb_iptables
 
-# 2) Baseline for all VMs
-- name: Baseline all VMs
-  hosts: all
+# 2) Then configure the rest (they depend on lb for access + time/NAT)
+- name: Configure all other VMs
+  hosts: all:!lb
   become: true
+  roles:
+    - common
+    - { role: mgmt,    when: "'mgmt' in group_names" }
+    - { role: db,         when: "'db' in group_names" }
+    - { role: docker,     when: "'docker' in group_names" }
+    - { role: monitor,    when: "'monitor' in group_names" }
+    - { role: k8s_master, when: "'k8s_master' in group_names" }
+    - { role: k8s_worker, when: "'k8s_worker' in group_names" }
