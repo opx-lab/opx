@@ -4,8 +4,8 @@
   hosts: lb
   become: true
   roles:
+    - lb/lb_gateway
     - common
-    - lb/lb_iptables
 
 # 2) Then configure the rest (they depend on lb for access + time/NAT)
 - name: Configure all other VMs

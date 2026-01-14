@@ -1,0 +1,39 @@
+---
+# roles/common/tasks/35_apt_locks.yml
+
+- name: Stop and mask unattended-upgrades (best-effort)
+  ansible.builtin.systemd:
+    name: unattended-upgrades.service
+    state: stopped
+    enabled: false
+    masked: true
+  failed_when: false
+
+- name: Stop and mask apt timers/services (best-effort)
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: stopped
+    enabled: false
+    masked: true
+  loop:
+    - apt-daily.service
+    - apt-daily.timer
+    - apt-daily-upgrade.service
+    - apt-daily-upgrade.timer
+  failed_when: false
+
+- name: Kill unattended-upgrade-shutdown helper if present (SIGKILL; best-effort)
+  ansible.builtin.shell: |
+    set +e
+    pkill -9 -f unattended-upgrade-shutdown 2>/dev/null || true
+    pkill -9 -f unattended-upgrade          2>/dev/null || true
+    exit 0
+  args:
+    executable: /bin/bash
+  changed_when: false
+  failed_when: false
+
+- name: Recover dpkg database if needed (best-effort)
+  ansible.builtin.command: dpkg --configure -a
+  changed_when: false
+  failed_when: false

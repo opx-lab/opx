@@ -1,56 +1,13 @@
 ---
 # =========================
-# APT bootstrap (must be FIRST for deterministic apt)
-# =========================
-- name: Ensure /etc/apt/apt.conf.d exists
-  ansible.builtin.file:
-    path: /etc/apt/apt.conf.d
-    state: directory
-    mode: "0755"
-
-- name: Configure APT proxy (HTTP only)
-  ansible.builtin.copy:
-    dest: /etc/apt/apt.conf.d/01proxy
-    owner: root
-    group: root
-    mode: "0644"
-    content: |
-      Acquire::http::Proxy "http://192.168.1.50:3142";
-      Acquire::https::Proxy "false";
-
-- name: Bypass APT proxy for Debian Security repo
-  ansible.builtin.copy:
-    dest: /etc/apt/apt.conf.d/02noproxy-security
-    owner: root
-    group: root
-    mode: "0644"
-    content: |
-      Acquire::http::Proxy::security.debian.org "DIRECT";
-
-- name: Configure APT sources.list (HTTP)
-  ansible.builtin.copy:
-    dest: /etc/apt/sources.list
-    owner: root
-    group: root
-    mode: "0644"
-    content: |
-      deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware
-      deb http://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware
-      deb http://security.debian.org bookworm-security main contrib non-free non-free-firmware
-
-# =========================
-# Time sync (chrony)
-# lb-vm: upstream opx-pc, serve mgmt subnet
+# Chrony (lb-vm: upstream opx-pc, serve mgmt subnet)
 # =========================
 - name: Install chrony
   ansible.builtin.apt:
     name: chrony
     state: present
-    update_cache: true
-  register: _apt_chrony
-  retries: 10
-  delay: 6
-  until: _apt_chrony is succeeded
+    update_cache: false
+    lock_timeout: 60
 
 - name: Configure chrony (lb-vm upstream opx-pc, serve mgmt subnet)
   ansible.builtin.copy:
@@ -76,24 +33,13 @@
       maxupdateskew 100.0
       rtcsync
       leapsectz right/UTC
-  notify:
-    - restart chrony
+  notify: restart_chrony
 
 - name: Ensure chrony is enabled and started
   ansible.builtin.systemd:
     name: chrony
     enabled: true
     state: started
-
-- name: Wait for chrony sync
-  ansible.builtin.command: chronyc tracking
-  register: _chrony_tracking
-  retries: 20
-  delay: 3
-  until:
-    - _chrony_tracking.stdout is search("Leap status")
-    - _chrony_tracking.stdout is search("Normal")
-  changed_when: false
 
 # =========================
 # Routing/NAT dependencies
@@ -107,6 +53,7 @@
       - procps
     state: present
     update_cache: false
+    lock_timeout: 60
 
 - name: Prevent ARP flux (two NICs on same bridge)
   ansible.builtin.copy:
@@ -124,7 +71,7 @@
       net.ipv4.conf.eth1.arp_ignore=1
       net.ipv4.conf.eth1.arp_announce=2
 
-- name: Apply sysctl settings
+- name: Apply sysctl settings from files
   ansible.builtin.command: sysctl --system
   changed_when: false
 
@@ -136,7 +83,7 @@
     reload: true
 
 # =========================
-# iptables rules
+# iptables rules + persistence (idempotent)
 # =========================
 - name: Deploy IPv4 iptables rules
   ansible.builtin.template:
