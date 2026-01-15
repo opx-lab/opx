@@ -2,3 +2,4 @@
 - import_playbook: playbooks/lb.yml
 - import_playbook: playbooks/all.yml
 - import_playbook: playbooks/monitor.yml
+- import_playbook: playbooks/docker.yml

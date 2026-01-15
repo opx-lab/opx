@@ -30,6 +30,7 @@ common_packages:
   - iptables-persistent
   - netfilter-persistent
   - procps
+  - apt-transport-https
 
 # =========================
 # System basics

@@ -1,0 +1,52 @@
+- name: Ensure /etc/apt/keyrings exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+# Vendoring avoids your proxy/CONNECT drama.
+# Put docker.gpg into roles/docker/files/docker.gpg (dearmored key).
+- name: Install Docker keyring (vendored)
+  ansible.builtin.copy:
+    src: docker.gpg
+    dest: /etc/apt/keyrings/docker.gpg
+    owner: root
+    group: root
+    mode: "0644"
+  when: docker_apt_repo | bool
+
+- name: Add Docker APT repo
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/docker.list
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian {{ ansible_distribution_release }} {{ docker_channel }}
+  when: docker_apt_repo | bool
+
+- name: apt update (docker repo)
+  ansible.builtin.shell: |
+    set -e
+    export DEBIAN_FRONTEND=noninteractive
+    timeout 90s apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=15 -o Acquire::https::Timeout=15 update
+  args:
+    executable: /bin/bash
+  register: _apt_docker
+  retries: 3
+  delay: 5
+  until: _apt_docker.rc == 0
+  when: docker_apt_repo | bool
+
+- name: Install Docker engine packages
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - "{{ 'docker-compose-plugin' if docker_compose_plugin | bool else omit }}"
+    state: present
+    update_cache: false
