@@ -19,3 +19,7 @@
     - { role: monitor,    when: "'monitor' in group_names" }
     - { role: k8s_master, when: "'k8s_master' in group_names" }
     - { role: k8s_worker, when: "'k8s_worker' in group_names" }
+
+
+- name: Monitoring stack
+  import_playbook: playbooks/monitor.yml

@@ -2,3 +2,9 @@
   become: yes
   roles:
     - common
+
+- name: Configure monitoring stack on monitor-vm
+  hosts: monitor
+  become: true
+  roles:
+    - role: monitor

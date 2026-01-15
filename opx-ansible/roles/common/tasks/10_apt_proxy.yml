@@ -1,23 +1,42 @@
 ---
+# roles/common/tasks/10_apt_proxy.yml
+
 - name: Ensure /etc/apt/apt.conf.d exists
   ansible.builtin.file:
     path: /etc/apt/apt.conf.d
     state: directory
+    owner: root
+    group: root
     mode: "0755"
 
-- name: Configure APT proxy (HTTP only)
+- name: Configure APT HTTP proxy (apt-cacher-ng)
   ansible.builtin.copy:
     dest: /etc/apt/apt.conf.d/01proxy
     owner: root
     group: root
     mode: "0644"
     content: |
-      Acquire::http::Proxy "{{ apt_proxy_url | default('') }}";
-      Acquire::https::Proxy "false";
-  when: (apt_proxy_url | default('')) | length > 0
+      Acquire::http::Proxy "{{ apt_proxy_url }}";
+  when: apt_proxy_url is defined and apt_proxy_url | length > 0
 
-- name: Remove APT proxy config when proxy is not set
+- name: Configure APT HTTPS proxy (tunneling via apt-cacher-ng)
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/02https-proxy
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      Acquire::https::Proxy "{{ apt_proxy_url }}";
+  when:
+    - apt_proxy_url is defined
+    - apt_proxy_url | length > 0
+    - apt_https_tunnel_enabled | default(true) | bool
+
+- name: Remove APT proxy configs when proxy is not set
   ansible.builtin.file:
-    path: /etc/apt/apt.conf.d/01proxy
+    path: "/etc/apt/apt.conf.d/{{ item }}"
     state: absent
-  when: (apt_proxy_url | default('')) | length == 0
+  loop:
+    - 01proxy
+    - 02https-proxy
+  when: apt_proxy_url is not defined or apt_proxy_url | length == 0

@@ -1,0 +1,37 @@
+---
+- name: Ensure keyrings dir exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Install Grafana keyring (vendored)
+  ansible.builtin.copy:
+    src: grafana.gpg
+    dest: /etc/apt/keyrings/grafana.gpg
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Add Grafana APT repo
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main"
+    filename: grafana
+    state: present
+    update_cache: false
+
+- name: apt update
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 0
+
+- name: Install Grafana
+  ansible.builtin.apt:
+    name: grafana
+    state: present
+
+- name: Enable and start Grafana
+  ansible.builtin.service:
+    name: grafana-server
+    state: started
+    enabled: true
