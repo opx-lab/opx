@@ -17,3 +17,14 @@
     state: present
     update_cache: false
     lock_timeout: 120
+
+- name: Ensure Ansible remote_tmp exists and is sticky
+  ansible.builtin.file:
+    path: /tmp/.ansible-opx/tmp
+    state: directory
+    owner: root
+    group: root
+    mode: "1777"
+  become: true
+
+

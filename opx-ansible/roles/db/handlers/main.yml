@@ -1,0 +1,6 @@
+- name: Restart exporter now
+  ansible.builtin.systemd:
+    name: prometheus-postgres-exporter
+    state: restarted
+    daemon_reload: true
+  become: true

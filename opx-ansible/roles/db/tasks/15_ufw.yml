@@ -1,0 +1,66 @@
+---
+- name: Install ufw
+  ansible.builtin.apt:
+    name: ufw
+    state: present
+    update_cache: false
+  become: true
+
+- name: Reset UFW (safe baseline)
+  ansible.builtin.command: ufw --force reset
+  register: _ufw_reset
+  changed_when: "'Resetting' in _ufw_reset.stdout or _ufw_reset.rc == 0"
+  failed_when: false
+  become: true
+
+- name: Set UFW defaults
+  ansible.builtin.command: "{{ item }}"
+  loop:
+    - "ufw default deny incoming"
+    - "ufw default allow outgoing"
+  register: _ufw_defaults
+  changed_when: false
+  failed_when: false
+  become: true
+
+- name: Allow SSH from mgmt network
+  ansible.builtin.command: "ufw allow from {{ mgmt_cidr }} to any port 22 proto tcp"
+  register: _ufw_ssh_mgmt
+  changed_when: "'Rule added' in _ufw_ssh_mgmt.stdout"
+  failed_when: false
+  become: true
+
+- name: Allow SSH from opx-pc
+  ansible.builtin.command: "ufw allow from {{ opx_pc_ip }} to any port 22 proto tcp"
+  register: _ufw_ssh_opx
+  changed_when: "'Rule added' in _ufw_ssh_opx.stdout"
+  failed_when: false
+  become: true
+
+- name: Allow Postgres from mgmt network
+  ansible.builtin.command: "ufw allow from {{ mgmt_cidr }} to any port {{ postgres_port }} proto tcp"
+  register: _ufw_pg
+  changed_when: "'Rule added' in _ufw_pg.stdout"
+  failed_when: false
+  become: true
+
+- name: Allow postgres exporter from mgmt network
+  ansible.builtin.command: "ufw allow from {{ mgmt_cidr }} to any port {{ postgres_exporter_port }} proto tcp"
+  register: _ufw_exp
+  changed_when: "'Rule added' in _ufw_exp.stdout"
+  failed_when: false
+  become: true
+
+- name: Enable UFW
+  ansible.builtin.command: ufw --force enable
+  register: _ufw_enable
+  changed_when: "'Firewall is active' in _ufw_enable.stdout or _ufw_enable.rc == 0"
+  failed_when: false
+  become: true
+
+- name: Reload UFW
+  ansible.builtin.command: ufw reload
+  register: _ufw_reload
+  changed_when: false
+  failed_when: false
+  become: true

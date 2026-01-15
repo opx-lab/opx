@@ -1,0 +1,46 @@
+---
+- name: Ensure exporter env file exists (Debian)
+  ansible.builtin.stat:
+    path: /etc/default/prometheus-postgres-exporter
+  register: _exp_env
+
+- name: Fail if exporter env file missing
+  ansible.builtin.fail:
+    msg: "/etc/default/prometheus-postgres-exporter not found. Is prometheus-postgres-exporter installed?"
+  when: not _exp_env.stat.exists
+
+- name: Create exporter DB user
+  community.postgresql.postgresql_user:
+    name: "{{ postgres_exporter_user | default('postgres_exporter') }}"
+    password: "{{ postgres_exporter_password }}"
+    db: postgres
+    role_attr_flags: "LOGIN,NOSUPERUSER,NOCREATEDB,NOCREATEROLE,NOREPLICATION"
+    state: present
+  become: true
+  become_user: postgres
+
+- name: Grant exporter minimal privileges (read-only stats)
+  community.postgresql.postgresql_query:
+    db: postgres
+    query: "GRANT pg_monitor TO {{ postgres_exporter_user | default('postgres_exporter') }};"
+  become: true
+  become_user: postgres
+
+- name: Set DATA_SOURCE_NAME for exporter (Debian env file)
+  ansible.builtin.lineinfile:
+    path: /etc/default/prometheus-postgres-exporter
+    regexp: '^DATA_SOURCE_NAME='
+    line: "DATA_SOURCE_NAME='postgresql://{{ postgres_exporter_user | default('postgres_exporter') }}:{{ postgres_exporter_password }}@127.0.0.1:5432/postgres?sslmode=disable'"
+    create: false
+    owner: root
+    group: prometheus
+    mode: "0640"
+  become: true
+  notify: Restart prometheus-postgres-exporter
+
+- name: Ensure exporter enabled and started
+  ansible.builtin.systemd:
+    name: prometheus-postgres-exporter
+    enabled: true
+    state: started
+  become: true
