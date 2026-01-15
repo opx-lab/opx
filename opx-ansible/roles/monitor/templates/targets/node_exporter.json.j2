@@ -1,0 +1,8 @@
+[
+{% set items = [] %}
+{% for h in (groups['all'] | sort) %}
+{%   set ip = (hostvars[h].ansible_host | default(h)) %}
+{%   set _ = items.append('  { "targets": ["' ~ ip ~ ':9100"], "labels": { "node": "' ~ h ~ '" } }') %}
+{% endfor %}
+{{ items | join(",\n") }}
+]

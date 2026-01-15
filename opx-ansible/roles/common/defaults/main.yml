@@ -23,6 +23,13 @@ common_packages:
   - tcpdump
   - gnupg
   - lsb-release
+  - jq
+  - yq
+  - unzip
+  - iptables
+  - iptables-persistent
+  - netfilter-persistent
+  - procps
 
 # =========================
 # System basics

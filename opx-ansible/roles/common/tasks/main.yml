@@ -5,5 +5,5 @@
 - import_tasks: 25_apt_locks.yml
 - import_tasks: 30_chrony.yml
 - import_tasks: 40_apt_baseline.yml
-- import_tasks: 50_packages.yml
-- import_tasks: 60_sysctl.yml
+- import_tasks: 50_sysctl.yml
+- import_tasks: 60_node_exporter.yml

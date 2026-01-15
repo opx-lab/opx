@@ -35,6 +35,9 @@
 -A FORWARD -i eth0 -o eth1 -s 192.168.1.50/32 -d 192.168.55.0/24 -p tcp --dport 22 -j ACCEPT
 -A FORWARD -i eth1 -o eth0 -s 192.168.55.0/24 -d 192.168.1.50/32 -p tcp --sport 22 -m conntrack --ctstate ESTABLISHED -j ACCEPT
 
+# allow Prometheus node_exporter scraping from opx-pc
+-A INPUT -s 192.168.55.0/24 -p tcp -m tcp --dport 9100 -j ACCEPT
+
 COMMIT
 
 *nat

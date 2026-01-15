@@ -1,19 +1,19 @@
-- name: apt update (must succeed)
-  ansible.builtin.apt:
-    update_cache: true
-    cache_valid_time: 0
-    lock_timeout: 300
-  register: apt_update
-  retries: 10
-  delay: 6
-  until: apt_update is succeeded
+- name: apt update with hard timeout + retries (must succeed)
+  ansible.builtin.shell: |
+    set -e
+    export DEBIAN_FRONTEND=noninteractive
+    timeout 90s apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=15 -o Acquire::https::Timeout=15 update
+  args:
+    executable: /bin/bash
+  register: apt_update_out
+  retries: 3
+  delay: 5
+  until: apt_update_out.rc == 0
+  changed_when: false
 
 - name: Install common packages
   ansible.builtin.apt:
-    name: "{{ common_packages | default([]) }}"
+    name: "{{ common_packages }}"
     state: present
-    lock_timeout: 300
-  register: apt_install
-  retries: 10
-  delay: 6
-  until: apt_install is succeeded
+    update_cache: false
+    lock_timeout: 120

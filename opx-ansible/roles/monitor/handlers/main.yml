@@ -1,7 +1,7 @@
 ---
-- name: restart prometheus
+- name: restart_prometheus
   ansible.builtin.systemd:
-    name: "{{ prometheus_unit | default('prometheus.service') }}"
+    name: "{{ prometheus_unit | default('prometheus') }}"
     state: restarted
     daemon_reload: true
 

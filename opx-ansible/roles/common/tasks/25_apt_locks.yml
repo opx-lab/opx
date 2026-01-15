@@ -1,37 +1,59 @@
----
-# roles/common/tasks/35_apt_locks.yml
-
-- name: Stop and mask unattended-upgrades (best-effort)
-  ansible.builtin.systemd:
-    name: unattended-upgrades.service
-    state: stopped
-    enabled: false
-    masked: true
+- name: Install base tools needed for lock diagnostics (once)
+  ansible.builtin.apt:
+    name:
+      - psmisc        # fuser
+      - procps        # pgrep
+      - ca-certificates
+    state: present
+    update_cache: false
   failed_when: false
 
-- name: Stop and mask apt timers/services (best-effort)
+- name: Stop + mask unattended upgrades and apt timers (best-effort)
   ansible.builtin.systemd:
     name: "{{ item }}"
     state: stopped
     enabled: false
     masked: true
   loop:
+    - unattended-upgrades.service
     - apt-daily.service
     - apt-daily.timer
     - apt-daily-upgrade.service
     - apt-daily-upgrade.timer
   failed_when: false
 
-- name: Kill unattended-upgrade-shutdown helper if present (SIGKILL; best-effort)
+- name: Kill any running unattended/apt/dpkg processes (best-effort)
   ansible.builtin.shell: |
-    set +e
-    pkill -9 -f unattended-upgrade-shutdown 2>/dev/null || true
-    pkill -9 -f unattended-upgrade          2>/dev/null || true
-    exit 0
+    set -e
+    # kill common culprits; ignore errors
+    pkill -9 -f 'unattended-upgrades|unattended-upgrade-shutdown|apt.systemd.daily' 2>/dev/null || true
+    pkill -9 -x apt-get 2>/dev/null || true
+    pkill -9 -x apt 2>/dev/null || true
+    pkill -9 -x dpkg 2>/dev/null || true
   args:
     executable: /bin/bash
   changed_when: false
   failed_when: false
+
+- name: Wait until dpkg lock holders are gone (max 30s)
+  ansible.builtin.shell: |
+    set -e
+    locks="/var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/cache/apt/archives/lock /var/lib/apt/lists/lock"
+    for i in $(seq 1 30); do
+      busy=0
+      for f in $locks; do
+        [ -e "$f" ] || continue
+        if fuser "$f" >/dev/null 2>&1; then busy=1; fi
+      done
+      if [ "$busy" -eq 0 ]; then exit 0; fi
+      sleep 1
+    done
+    echo "Lock holders still present" >&2
+    for f in $locks; do [ -e "$f" ] && echo "-- $f" && fuser -v "$f" || true; done
+    exit 1
+  args:
+    executable: /bin/bash
+  changed_when: false
 
 - name: Recover dpkg database if needed (best-effort)
   ansible.builtin.command: dpkg --configure -a

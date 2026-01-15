@@ -13,6 +13,24 @@
     group: root
     mode: "0755"
 
+- name: Ensure file_sd directory exists
+  ansible.builtin.file:
+    path: /etc/prometheus/file_sd
+    state: directory
+    owner: prometheus
+    group: prometheus
+    mode: "0755"
+
+- name: Deploy node_exporter file_sd targets
+  ansible.builtin.template:
+    src: targets/node_exporter.json.j2
+    dest: /etc/prometheus/file_sd/node_exporter.json
+    owner: prometheus
+    group: prometheus
+    mode: "0644"
+  notify: restart_prometheus
+
+
 - name: Deploy Prometheus config
   ansible.builtin.template:
     src: prometheus.yml.j2
@@ -20,6 +38,7 @@
     owner: root
     group: root
     mode: "0644"
+  notify: restart_prometheus
 
 - name: Configure Prometheus retention + listen address (Debian default file)
   ansible.builtin.copy:
@@ -29,6 +48,7 @@
     mode: "0644"
     content: |
       ARGS="--config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/var/lib/prometheus --storage.tsdb.retention.time=15d --web.listen-address=0.0.0.0:9090"
+  notify: restart_prometheus
 
 - name: Gather service facts
   ansible.builtin.service_facts:
@@ -42,13 +62,13 @@
           | select('in', (ansible_facts.services.keys() | list))
           | list
           | first
-        )
+        ) | default('', true)
       }}
 
 - name: Fail if Prometheus unit not found
   ansible.builtin.fail:
     msg: "Prometheus installed but no prometheus unit found in systemd. Known units: {{ ansible_facts.services.keys() | list | sort }}"
-  when: prometheus_unit is not defined or prometheus_unit | length == 0
+  when: prometheus_unit | length == 0
 
 - name: Ensure Prometheus enabled and started
   ansible.builtin.systemd:
