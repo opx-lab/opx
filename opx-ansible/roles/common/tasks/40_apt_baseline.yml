@@ -28,3 +28,13 @@
   become: true
 
 
+######### TEMP#####################
+- name: Ensure iptables persistence packages are absent on non-LB VMs
+  ansible.builtin.apt:
+    name:
+      - iptables-persistent
+      - netfilter-persistent
+    state: absent
+    purge: true
+  when: inventory_hostname != 'lb-vm'
+  become: true

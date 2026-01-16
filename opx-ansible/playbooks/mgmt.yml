@@ -1,4 +1,4 @@
 - hosts: mgmt-vm
   become: yes
-  roles:
-    - common
+  # roles:
+  #   - mgmt

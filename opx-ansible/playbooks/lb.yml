@@ -4,4 +4,4 @@
   become: true
   roles:
     - lb/lb_gateway
-    - common
+  

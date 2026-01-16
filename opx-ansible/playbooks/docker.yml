@@ -1,5 +1,4 @@
 - hosts: docker-vm
   become: yes
-  roles:
-    - common
-    - docker
+  # roles:
+  #   - docker

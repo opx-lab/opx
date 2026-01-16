@@ -1,5 +1,4 @@
 - hosts: db-vm
   become: yes
-  roles:
-    - common
-    - db
+  # roles:
+   # - db

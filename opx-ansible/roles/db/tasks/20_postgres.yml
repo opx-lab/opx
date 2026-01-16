@@ -35,9 +35,10 @@
 - name: Configure listen_addresses
   ansible.builtin.lineinfile:
     path: "{{ pg_postgresql_conf }}"
-    regexp: "^[#\\s]*listen_addresses\\s*="
-    line: "listen_addresses = '{{ postgres_listen_addresses }}'"
-    backrefs: false
+    regexp: '^#?\s*listen_addresses\s*='
+    line: "listen_addresses = '0.0.0.0'"
+  notify: Restart postgresql
+  become: true
 
 - name: Configure port (optional but explicit)
   ansible.builtin.lineinfile:
@@ -53,8 +54,3 @@
     create: false
     insertafter: EOF
 
-- name: Ensure postgres is enabled and restarted
-  ansible.builtin.service:
-    name: postgresql
-    state: restarted
-    enabled: true

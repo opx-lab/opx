@@ -3,7 +3,7 @@
   become: true
   roles:
     - common
-    - { role: mgmt,    when: "'mgmt' in group_names" }
+    - { role: mgmt,       when: "'mgmt' in group_names" }
     - { role: db,         when: "'db' in group_names" }
     - { role: docker,     when: "'docker' in group_names" }
     - { role: monitor,    when: "'monitor' in group_names" }

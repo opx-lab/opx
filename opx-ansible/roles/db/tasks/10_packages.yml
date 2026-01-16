@@ -1,7 +1,13 @@
 ---
-- name: Ensure remote tmp exists (for become_user=postgres modules)
+- name: Ensure ACL tools present (needed for become_user tempfiles)
+  ansible.builtin.apt:
+    name: acl
+    state: present
+    update_cache: true
+
+- name: Ensure remote_tmp exists for postgres become_user
   ansible.builtin.file:
-    path: /tmp/.ansible-postgres/tmp
+    path: "/tmp/.ansible-postgres/tmp"
     state: directory
     owner: postgres
     group: postgres
@@ -15,7 +21,6 @@
       - postgresql-client
       - prometheus-postgres-exporter
       - python3-psycopg2
-      - ufw
     state: present
     update_cache: true
   become: true

@@ -1,6 +1,17 @@
-- name: Restart exporter now
+- name: Restart prometheus-postgres-exporter
   ansible.builtin.systemd:
     name: prometheus-postgres-exporter
     state: restarted
-    daemon_reload: true
+  become: true
+
+- name: Restart postgresql
+  ansible.builtin.systemd:
+    name: postgresql
+    state: restarted
+  become: true
+
+- name: Restart nftables
+  ansible.builtin.systemd:
+    name: nftables
+    state: restarted
   become: true

@@ -1,0 +1,53 @@
+- name: Install nftables
+  ansible.builtin.apt:
+    name: nftables
+    state: present
+    update_cache: false
+  become: true
+
+- name: Deploy nftables ruleset
+  ansible.builtin.copy:
+    dest: /etc/nftables.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      #!/usr/sbin/nft -f
+
+      flush ruleset
+
+      table inet filter {
+        chain input {
+          type filter hook input priority filter; policy drop;
+
+          iif "lo" accept
+          ct state established,related accept
+
+          ip saddr 192.168.1.50 tcp dport 22 accept
+          ip saddr 192.168.55.0/24 tcp dport 22 accept
+          ip saddr 192.168.55.0/24 tcp dport 5432 accept
+          ip saddr 192.168.55.0/24 tcp dport 9187 accept
+        }
+
+        chain forward {
+          type filter hook forward priority filter; policy drop;
+        }
+
+        chain output {
+          type filter hook output priority filter; policy accept;
+        }
+      }
+  become: true
+  notify: Restart nftables
+
+- name: Enable and start nftables
+  ansible.builtin.systemd:
+    name: nftables
+    enabled: true
+    state: started
+  become: true
+
+- name: Load nftables ruleset now (atomic apply)
+  ansible.builtin.command: nft -f /etc/nftables.conf
+  become: true
+  changed_when: false
