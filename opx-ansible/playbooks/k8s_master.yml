@@ -1,4 +1,0 @@
-- hosts: k8s-master-vm
-  become: yes
-  roles:
-    - common

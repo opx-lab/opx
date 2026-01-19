@@ -1,4 +1,0 @@
-- hosts: k8s-worker-vm
-  become: yes
-  roles:
-    - common

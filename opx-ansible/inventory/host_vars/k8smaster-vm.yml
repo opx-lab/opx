@@ -1,3 +1,0 @@
-# host_vars/k8smaster-vm.yml
-ansible_host: 192.168.55.40
-ansible_user: opx

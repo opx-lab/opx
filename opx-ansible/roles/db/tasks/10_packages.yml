@@ -1,17 +1,18 @@
 ---
+- name: Ensure Ansible remote_tmp exists for postgres become_user
+  ansible.builtin.file:
+    path: /var/tmp/.ansible-postgres/tmp
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: "0750"
+  become: true
+
 - name: Ensure ACL tools present (needed for become_user tempfiles)
   ansible.builtin.apt:
     name: acl
     state: present
     update_cache: true
-
-- name: Ensure remote_tmp exists for postgres become_user
-  ansible.builtin.file:
-    path: "/tmp/.ansible-postgres/tmp"
-    state: directory
-    owner: postgres
-    group: postgres
-    mode: "0700"
   become: true
 
 - name: Install DB packages
@@ -24,4 +25,3 @@
     state: present
     update_cache: true
   become: true
-

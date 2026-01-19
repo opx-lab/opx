@@ -7,5 +7,3 @@
     - { role: db,         when: "'db' in group_names" }
     - { role: docker,     when: "'docker' in group_names" }
     - { role: monitor,    when: "'monitor' in group_names" }
-    - { role: k8s_master, when: "'k8s_master' in group_names" }
-    - { role: k8s_worker, when: "'k8s_worker' in group_names" }
