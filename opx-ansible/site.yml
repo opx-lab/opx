@@ -3,3 +3,5 @@
   tags: [lb]
 - import_playbook: playbooks/all.yml
   tags: [common]
+- import_playbook: playbooks/ssh_mesh.yml
+  tags: [ssh]

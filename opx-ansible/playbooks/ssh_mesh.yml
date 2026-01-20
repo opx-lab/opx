@@ -1,0 +1,23 @@
+- name: Create mgmt keypair and SSH config on mgmt-vm
+  hosts: mgmt
+  become: false
+  roles:
+    - mgmt_ssh
+
+- name: Install mgmt-vm public key on all target VMs
+  hosts: "db:docker:monitor"
+  become: true
+  tasks:
+    - name: Ensure ~/.ssh exists for opx
+      ansible.builtin.file:
+        path: "/home/opx/.ssh"
+        state: directory
+        owner: "opx"
+        group: "opx"
+        mode: "0700"
+
+    - name: Authorize mgmt-vm key for opx
+      ansible.posix.authorized_key:
+        user: "opx"
+        key: "{{ hostvars[groups['mgmt'][0]].mgmt_pubkey }}"
+        state: present
