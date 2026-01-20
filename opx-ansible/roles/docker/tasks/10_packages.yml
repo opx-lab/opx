@@ -1,4 +1,4 @@
-- name: Ensure /etc/apt/keyrings exists
+- name: Ensure apt keyrings dir exists
   ansible.builtin.file:
     path: /etc/apt/keyrings
     state: directory
@@ -6,39 +6,36 @@
     group: root
     mode: "0755"
 
-# Vendoring avoids your proxy/CONNECT drama.
-# Put docker.gpg into roles/docker/files/docker.gpg (dearmored key).
-- name: Install Docker keyring (vendored)
-  ansible.builtin.copy:
-    src: docker.gpg
-    dest: /etc/apt/keyrings/docker.gpg
-    owner: root
-    group: root
-    mode: "0644"
-  when: docker_apt_repo | bool
-
-- name: Add Docker APT repo
-  ansible.builtin.copy:
-    dest: /etc/apt/sources.list.d/docker.list
-    owner: root
-    group: root
-    mode: "0644"
-    content: |
-      deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian {{ ansible_distribution_release }} {{ docker_channel }}
-  when: docker_apt_repo | bool
-
-- name: apt update (docker repo)
+- name: Install Docker repo key (dearmored gpg)
   ansible.builtin.shell: |
-    set -e
-    export DEBIAN_FRONTEND=noninteractive
-    timeout 90s apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=15 -o Acquire::https::Timeout=15 update
+    set -euo pipefail
+    curl -fsSL https://download.docker.com/linux/debian/gpg \
+      | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    chmod 0644 /etc/apt/keyrings/docker.gpg
   args:
-    executable: /bin/bash
-  register: _apt_docker
-  retries: 3
-  delay: 5
-  until: _apt_docker.rc == 0
-  when: docker_apt_repo | bool
+    creates: /etc/apt/keyrings/docker.gpg
+
+# - name: Remove old docker.asc if present (avoid Signed-By conflicts)
+#   ansible.builtin.file:
+#     path: /etc/apt/keyrings/docker.asc
+#     state: absent
+
+# - name: Remove old docker repo list files (avoid Signed-By conflicts)
+#   ansible.builtin.file:
+#     path: "{{ item }}"
+#     state: absent
+#   loop:
+#     - /etc/apt/sources.list.d/docker.list
+#     - /etc/apt/sources.list.d/docker-ce.list
+#     - /etc/apt/sources.list.d/docker.repo.list
+
+- name: Add Docker apt repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian bookworm stable"
+    filename: docker
+    state: present
+    update_cache: true
+
 
 - name: Install Docker engine packages
   ansible.builtin.apt:

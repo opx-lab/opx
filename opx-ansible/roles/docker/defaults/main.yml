@@ -1,0 +1,18 @@
+# Enable Docker upstream repo (uses vendored key roles/docker/files/docker.gpg)
+docker_apt_repo: true
+docker_channel: stable
+
+# Install docker compose plugin package
+docker_compose_plugin: true
+
+# Users to be added to docker group
+docker_users:
+  - opx
+
+# Docker daemon.json content
+docker_daemon:
+  log-driver: "json-file"
+  log-opts:
+    max-size: "10m"
+    max-file: "3"
+  storage-driver: "overlay2"
