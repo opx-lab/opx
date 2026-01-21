@@ -2,4 +2,6 @@
 - import_tasks: 05_apt_proxy_bypass.yml
 - import_tasks: 10_packages.yml
 - import_tasks: 20_config.yml
+- import_tasks: 30_registry.yml
+- import_tasks: 40_gitea.yml
 - import_tasks: 90_verify.yml

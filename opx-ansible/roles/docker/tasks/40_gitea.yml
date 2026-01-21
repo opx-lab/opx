@@ -1,0 +1,35 @@
+---
+- name: Ensure gitea stack base dirs exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - /opt/stacks/gitea
+    - /opt/stacks/gitea/gitea
+
+- name: Install Gitea compose file
+  ansible.builtin.copy:
+    src: "gitea/compose.yml"
+    dest: /opt/stacks/gitea/compose.yml
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+  register: gitea_compose
+
+- name: Check if gitea container exists
+  ansible.builtin.command: docker inspect gitea
+  register: gitea_inspect
+  failed_when: false
+  changed_when: false
+  become: true
+
+- name: Start Gitea stack (only if missing or compose changed)
+  ansible.builtin.command:
+    cmd: docker compose -f /opt/stacks/gitea/compose.yml up -d
+    chdir: /opt/stacks/gitea
+  become: true
+  when: gitea_compose.changed or gitea_inspect.rc != 0

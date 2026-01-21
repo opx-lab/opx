@@ -1,4 +1,5 @@
-- hosts: docker-vm
-  become: yes
-  # roles:
-  #   - docker
+- name: Docker runtime + stacks on docker-vm
+  hosts: docker
+  become: true
+  roles:
+    - docker

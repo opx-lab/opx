@@ -1,7 +1,21 @@
 ---
 - import_playbook: playbooks/lb.yml
   tags: [lb]
+
 - import_playbook: playbooks/all.yml
   tags: [common]
+
+- import_playbook: playbooks/monitor.yml
+  tags: [monitor]
+
+- import_playbook: playbooks/db.yml
+  tags: [db]
+
+- import_playbook: playbooks/mgmt.yml
+  tags: [mgmt]
+
+- import_playbook: playbooks/docker.yml
+  tags: [docker]
+
 - import_playbook: playbooks/ssh_mesh.yml
   tags: [ssh]
