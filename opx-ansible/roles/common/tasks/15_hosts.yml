@@ -1,9 +1,11 @@
-- name: Ensure /etc/hosts contains OPX mgmt subnet entries
+- name: Ensure /etc/hosts has OPX mgmt entries
   ansible.builtin.blockinfile:
     path: /etc/hosts
-    create: false
+    create: true
     marker: "# {mark} OPX-LAB HOSTS"
     block: |
-      {% for e in opx_hosts_entries | default([]) %}
+      {% for e in opx_hosts_entries %}
       {{ e.ip }} {{ e.name }}
       {% endfor %}
+  become: true
+  when: opx_hosts_entries is defined
