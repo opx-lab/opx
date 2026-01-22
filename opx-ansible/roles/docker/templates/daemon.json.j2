@@ -1,10 +1,12 @@
 {
+  "insecure-registries": [
+    "docker-vm:5000",
+    "192.168.55.30:5000"
+  ],
   "log-driver": "json-file",
   "log-opts": {
-    "max-size": "10m",
-    "max-file": "3"
+    "max-file": "3",
+    "max-size": "10m"
   },
-  "iptables": true,
-  "live-restore": true,
-  "userland-proxy": false
+  "storage-driver": "overlay2"
 }

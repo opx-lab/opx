@@ -106,3 +106,44 @@
     name: netfilter-persistent
     enabled: true
     state: started
+
+# =========================
+# NGINX reverse proxy (git.opx.lab, reg.opx.lab)
+# =========================
+- name: Install nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+    update_cache: false
+    lock_timeout: 60
+
+- name: Remove default nginx site (avoid conflicts)
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Deploy opx-lab nginx vhosts
+  ansible.builtin.template:
+    src: opx-lab.conf.j2
+    dest: /etc/nginx/sites-available/opx-lab.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: reload_nginx
+
+- name: Enable opx-lab nginx site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/opx-lab.conf
+    dest: /etc/nginx/sites-enabled/opx-lab.conf
+    state: link
+  notify: reload_nginx
+
+- name: Validate nginx config
+  ansible.builtin.command: nginx -t
+  changed_when: false
+
+- name: Ensure nginx is enabled and running
+  ansible.builtin.systemd:
+    name: nginx
+    enabled: true
+    state: started

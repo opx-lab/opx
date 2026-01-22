@@ -2,3 +2,8 @@
   ansible.builtin.systemd:
     name: chrony
     state: restarted
+    
+- name: reload_nginx
+  ansible.builtin.systemd:
+    name: nginx
+    state: reloaded

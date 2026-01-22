@@ -8,3 +8,7 @@ opx_hosts_entries:
   - { ip: "192.168.55.20", name: "monitor-vm" }
   - { ip: "192.168.55.30", name: "docker-vm" }
   - { ip: "192.168.55.60", name: "db-vm" }
+  - { ip: "192.168.55.2",  name: "git.opx.lab" }
+  - { ip: "192.168.55.2",  name: "reg.opx.lab" }
+
+  

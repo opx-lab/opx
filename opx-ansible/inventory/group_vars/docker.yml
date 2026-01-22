@@ -11,7 +11,6 @@ docker_daemon:
     max-file: "3"
   storage-driver: "overlay2"
 
-  docker_daemon:
-  insecure-registries:
-    - "docker-vm:5000"
-    - "192.168.55.30:5000"
+gitea_root_url: "http://git.opx.lab/"
+gitea_ssh_port: "2222"
+gitea_ssh_domain: "git.opx.lab"

@@ -1,3 +1,11 @@
+- name: Enable IPv4 forwarding (required for container networking)
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    state: present
+    reload: true
+  become: true
+
 - name: Ensure /etc/docker exists
   ansible.builtin.file:
     path: /etc/docker
@@ -38,3 +46,5 @@
     name: docker
     enabled: true
     state: started
+
+    

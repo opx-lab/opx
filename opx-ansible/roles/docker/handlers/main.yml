@@ -2,3 +2,9 @@
   ansible.builtin.service:
     name: docker
     state: restarted
+
+- name: Restart gitea stack
+  ansible.builtin.command: docker compose -f /opt/stacks/gitea/compose.yml up -d
+  args:
+    chdir: /opt/stacks/gitea
+  become: true

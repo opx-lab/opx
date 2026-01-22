@@ -11,6 +11,11 @@
 # SSH to lb-vm (from opx-pc)
 -A INPUT -i eth0 -p tcp --dport 22 -s 192.168.1.50/32 -j ACCEPT
 
+
+# HTTP/HTTPS reverse proxy from mgmt subnet
+-A INPUT -i eth1 -p tcp --dport 80  -s 192.168.55.0/24 -j ACCEPT
+-A INPUT -i eth1 -p tcp --dport 443 -s 192.168.55.0/24 -j ACCEPT
+
 # DNS service for mgmt subnet (dnsmasq on lb-vm)
 -A INPUT -i eth1 -p udp --dport 53 -s 192.168.55.0/24 -j ACCEPT
 -A INPUT -i eth1 -p tcp --dport 53 -s 192.168.55.0/24 -j ACCEPT
