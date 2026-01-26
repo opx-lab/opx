@@ -21,3 +21,10 @@ scrape_configs:
           - /etc/prometheus/file_sd/node_exporter.json
         refresh_interval: 30s
 
+  - job_name: "postgres_exporter"
+    metrics_path: /metrics
+    scheme: http
+    file_sd_configs:
+      - files:
+          - /etc/prometheus/file_sd/postgres_exporter.json
+        refresh_interval: 30s

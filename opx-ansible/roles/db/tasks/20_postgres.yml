@@ -12,6 +12,7 @@
 - name: Create default cluster if missing
   ansible.builtin.command: bash -lc "pg_createcluster {{ _pg_major.stdout }} main --start"
   when: _pg_clusters_count.stdout | int == 0
+  become: true
 
 - name: Find postgresql.conf
   ansible.builtin.find:
@@ -46,11 +47,26 @@
     regexp: "^[#\\s]*port\\s*="
     line: "port = {{ postgres_port }}"
     backrefs: false
+  notify: Restart postgresql
+  become: true
 
-- name: Allow mgmt subnet in pg_hba (IPv4)
-  ansible.builtin.lineinfile:
+# Ensures ONLY the intended hosts have remote access via pg_hba,
+# without duplicating lines on reruns.
+- name: Ensure pg_hba allows opx-lab hosts (mgmt + docker) explicitly
+  become: true
+  ansible.builtin.blockinfile:
     path: "{{ pg_pg_hba_conf }}"
-    line: "host    all             all             {{ mgmt_cidr }}            scram-sha-256"
-    create: false
+    marker: "# {mark} OPX-LAB pg_hba"
     insertafter: EOF
+    block: |
+      # Allow mgmt-vm and docker-vm to reach PostgreSQL
+      host    all             all             192.168.55.10/32            scram-sha-256
+      host    all             all             192.168.55.30/32            scram-sha-256
+  notify: Restart postgresql
 
+- name: Ensure postgresql is enabled and running
+  become: true
+  ansible.builtin.systemd:
+    name: postgresql
+    enabled: true
+    state: started

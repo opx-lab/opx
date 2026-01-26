@@ -10,8 +10,16 @@
     state: restarted
   become: true
 
-- name: Restart nftables
+- name: Reload nftables
   ansible.builtin.systemd:
     name: nftables
     state: restarted
   become: true
+  
+- name: Reload prometheus
+  become: true
+  ansible.builtin.systemd:
+    name: prometheus
+    state: reloaded
+  register: _prom_reload
+  failed_when: false

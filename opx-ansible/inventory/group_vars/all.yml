@@ -11,4 +11,3 @@ opx_hosts_entries:
   - { ip: "192.168.55.2",  name: "git.opx.lab" }
   - { ip: "192.168.55.2",  name: "reg.opx.lab" }
 
-  

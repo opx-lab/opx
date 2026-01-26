@@ -15,10 +15,10 @@ grafana_admin_user: "admin"
 grafana_admin_password: "ChangeMeNow_Immediately"
 
 prometheus_node_targets:
-  - "192.168.1.60"     # lb-vm
-  - "192.168.55.10"    # mgmt-vm
-  - "192.168.55.20"    # db-vm
-  - "192.168.55.30"    # docker-vm
-  - "192.168.55.40"    # monitor-vm (optional, but usually yes)
-  - "192.168.55.50"    # k8smaster-vm
-  - "192.168.55.60"    # k8sworker-vm
+  - { ip: "192.168.1.60",  node: "lb-vm" }
+  - { ip: "192.168.55.10", node: "mgmt-vm" }
+  - { ip: "192.168.55.20", node: "db-vm" }
+  - { ip: "192.168.55.30", node: "docker-vm" }
+  - { ip: "192.168.55.40", node: "monitor-vm" }
+  - { ip: "192.168.55.50", node: "k8smaster-vm" }
+  - { ip: "192.168.55.60", node: "k8sworker-vm" }

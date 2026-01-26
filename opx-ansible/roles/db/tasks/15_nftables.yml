@@ -5,40 +5,15 @@
     update_cache: false
   become: true
 
-- name: Deploy nftables ruleset
-  ansible.builtin.copy:
+- name: Deploy nftables.conf
+  ansible.builtin.template:
+    src: nftables.conf.j2
     dest: /etc/nftables.conf
     owner: root
     group: root
     mode: "0644"
-    content: |
-      #!/usr/sbin/nft -f
-
-      flush ruleset
-
-      table inet filter {
-        chain input {
-          type filter hook input priority filter; policy drop;
-
-          iif "lo" accept
-          ct state established,related accept
-
-          ip saddr 192.168.1.50 tcp dport 22 accept
-          ip saddr 192.168.55.0/24 tcp dport 22 accept
-          ip saddr 192.168.55.0/24 tcp dport 5432 accept
-          ip saddr 192.168.55.0/24 tcp dport 9187 accept
-        }
-
-        chain forward {
-          type filter hook forward priority filter; policy drop;
-        }
-
-        chain output {
-          type filter hook output priority filter; policy accept;
-        }
-      }
   become: true
-  notify: Restart nftables
+  notify: Reload nftables
 
 - name: Enable and start nftables
   ansible.builtin.systemd:

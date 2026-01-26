@@ -53,6 +53,14 @@
     mode: "0640"
   become: true
   notify: Restart prometheus-postgres-exporter
+  
+- name: Ensure exporter env file perms (Debian)
+  become: true
+  ansible.builtin.file:
+    path: /etc/default/prometheus-postgres-exporter
+    owner: prometheus
+    group: prometheus
+    mode: "0640"
 
 - name: Ensure exporter enabled and started
   ansible.builtin.systemd:
