@@ -1,7 +1,10 @@
+---
+# roles/db/tasks/40_backup.yml
+#
 # Behavior:
 # - Always deploys script + systemd unit + timer (units always exist on the host).
 # - Only enables/starts the timer when postgres_backup_enabled=true.
-# - Timer runs 30 minutes after boot (covers VM downtime).
+# - Timer runs daily at 11:00 AND 30 minutes after boot (covers VM downtime).
 
 - name: Ensure backup dir exists
   tags: [backup]
@@ -11,6 +14,44 @@
     owner: postgres
     group: postgres
     mode: "0750"
+
+# Ensure db-vm export dir is always readable via SSH by user opx
+
+- name: Ensure export group exists
+  tags: [backup]
+  ansible.builtin.group:
+    name: "{{ postgres_backup_export_group | default('opx') }}"
+    state: present
+
+- name: Ensure opx user exists
+  tags: [backup]
+  ansible.builtin.user:
+    name: opx
+    state: present
+
+- name: Ensure opx user is in export group
+  tags: [backup]
+  ansible.builtin.user:
+    name: opx
+    groups: "{{ postgres_backup_export_group | default('opx') }}"
+    append: true
+  register: opx_group_change
+
+- name: Ensure PostgreSQL export dir exists with correct perms (setgid)
+  tags: [backup]
+  ansible.builtin.file:
+    path: "{{ postgres_backup_export_dir | default('/var/backups/postgresql-export') }}"
+    state: directory
+    owner: root
+    group: "{{ postgres_backup_export_group | default('opx') }}"
+    mode: "02750"   # setgid so files/dirs keep the group
+
+- name: Restart sshd if opx group membership changed (new logins get new groups)
+  tags: [backup]
+  ansible.builtin.service:
+    name: ssh
+    state: restarted
+  when: opx_group_change is changed
 
 - name: Install backup script
   tags: [backup]
@@ -34,7 +75,6 @@
       install -d -m 0750 -o postgres -g postgres "${BACKUP_DIR}"
       install -d -m 0750 -o root -g "${EXPORT_GROUP}" "${EXPORT_DIR}"
 
-      # Full logical backup (roles + DBs + data). --clean makes restore deterministic.
       sudo -u postgres pg_dumpall --clean --if-exists | gzip -9 > "${OUT}"
       chown postgres:postgres "${OUT}"
       chmod 0640 "${OUT}"
@@ -66,6 +106,8 @@
     content: |
       [Unit]
       Description=PostgreSQL logical backup (pg_dumpall)
+      Wants=network-online.target
+      After=network-online.target postgresql.service
 
       [Service]
       Type=oneshot
@@ -80,9 +122,10 @@
     mode: "0644"
     content: |
       [Unit]
-      Description=PostgreSQL delayed after boot
+      Description=PostgreSQL backup timer (daily 11:00 + 30m after boot)
 
       [Timer]
+      OnCalendar=*-*-* 11:00:00
       OnBootSec=30min
       Persistent=true
 
@@ -101,6 +144,14 @@
     enabled: true
     state: started
   when: (postgres_backup_enabled | default(false)) | bool
+
+- name: Disable + stop timer (when not enabled)
+  tags: [backup]
+  ansible.builtin.systemd:
+    name: pg-backup.timer
+    enabled: false
+    state: stopped
+  when: not ((postgres_backup_enabled | default(false)) | bool)
 
 - name: Check pg-backup.timer is active
   tags: [backup]
