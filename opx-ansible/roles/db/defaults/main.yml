@@ -7,3 +7,6 @@ postgres_exporter_db: postgres
 
 ufw_allow_from:
   - 192.168.55.0/24
+
+# DB objects provisioning
+postgres_provision: []

@@ -2,5 +2,6 @@
 - import_tasks: 10_packages.yml
 - import_tasks: 15_nftables.yml
 - import_tasks: 20_postgres.yml
+- import_tasks: 25_objects.yml
 - import_tasks: 30_exporter.yml
-
+- import_tasks: 40_backup.yml

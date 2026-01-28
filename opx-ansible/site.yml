@@ -8,7 +8,7 @@
 - import_playbook: playbooks/monitor.yml
   tags: [monitor]
 
-- import_playbook: playbooks/db.yml
+- import_playbook: playbooks/db/db.yml
   tags: [db]
 
 - import_playbook: playbooks/mgmt.yml

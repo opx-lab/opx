@@ -1,0 +1,117 @@
+# Behavior:
+# - Always deploys script + systemd unit + timer (units always exist on the host).
+# - Only enables/starts the timer when postgres_backup_enabled=true.
+# - Timer runs 30 minutes after boot (covers VM downtime).
+
+- name: Ensure backup dir exists
+  tags: [backup]
+  ansible.builtin.file:
+    path: "{{ postgres_backup_dir | default('/var/backups/postgresql') }}"
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: "0750"
+
+- name: Install backup script
+  tags: [backup]
+  ansible.builtin.copy:
+    dest: /usr/local/sbin/pg-backup.sh
+    owner: root
+    group: root
+    mode: "0750"
+    content: |
+      #!/bin/bash
+      set -euo pipefail
+
+      BACKUP_DIR="{{ postgres_backup_dir | default('/var/backups/postgresql') }}"
+      KEEP="{{ postgres_backup_keep | default(4) }}"
+      EXPORT_DIR="{{ postgres_backup_export_dir | default('/var/backups/postgresql-export') }}"
+      EXPORT_GROUP="{{ postgres_backup_export_group | default('opx') }}"
+
+      TS="$(date -u +%Y%m%dT%H%M%SZ)"
+      OUT="${BACKUP_DIR}/pg_dumpall_${TS}.sql.gz"
+
+      install -d -m 0750 -o postgres -g postgres "${BACKUP_DIR}"
+      install -d -m 0750 -o root -g "${EXPORT_GROUP}" "${EXPORT_DIR}"
+
+      # Full logical backup (roles + DBs + data). --clean makes restore deterministic.
+      sudo -u postgres pg_dumpall --clean --if-exists | gzip -9 > "${OUT}"
+      chown postgres:postgres "${OUT}"
+      chmod 0640 "${OUT}"
+
+      # Keep only N newest backups locally
+      mapfile -t FILES < <(ls -1t "${BACKUP_DIR}"/pg_dumpall_*.sql.gz 2>/dev/null || true)
+      NUM="$(printf '%s\n' "${FILES[@]}" | sed '/^$/d' | wc -l)"
+      if (( NUM > KEEP )); then
+        for f in "${FILES[@]:KEEP}"; do
+          rm -f -- "$f"
+        done
+      fi
+
+      # Export newest backups for pull (readable by EXPORT_GROUP)
+      rsync -a --delete --include 'pg_dumpall_*.sql.gz' --exclude '*' "${BACKUP_DIR}/" "${EXPORT_DIR}/"
+      chown root:"${EXPORT_GROUP}" "${EXPORT_DIR}"/pg_dumpall_*.sql.gz 2>/dev/null || true
+      chmod 0640 "${EXPORT_DIR}"/pg_dumpall_*.sql.gz 2>/dev/null || true
+
+      # Retention in export dir too
+      ls -1t "${EXPORT_DIR}"/pg_dumpall_*.sql.gz 2>/dev/null | tail -n +$((KEEP+1)) | xargs -r rm -f --
+
+- name: systemd unit for backup
+  tags: [backup]
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/pg-backup.service
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=PostgreSQL logical backup (pg_dumpall)
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/sbin/pg-backup.sh
+
+- name: systemd timer for backup (11:00 daily + 30min after boot)
+  tags: [backup]
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/pg-backup.timer
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=PostgreSQL delayed after boot
+
+      [Timer]
+      OnBootSec=30min
+      Persistent=true
+
+      [Install]
+      WantedBy=timers.target
+
+- name: Reload systemd
+  tags: [backup]
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Enable + start timer (only when enabled)
+  tags: [backup]
+  ansible.builtin.systemd:
+    name: pg-backup.timer
+    enabled: true
+    state: started
+  when: (postgres_backup_enabled | default(false)) | bool
+
+- name: Check pg-backup.timer is active
+  tags: [backup]
+  ansible.builtin.command: systemctl is-active pg-backup.timer
+  register: timer_active
+  changed_when: false
+  failed_when: (postgres_backup_enabled | default(false)) | bool and timer_active.stdout.strip() != "active"
+
+- name: Check pg-backup.timer is enabled
+  tags: [backup]
+  ansible.builtin.command: systemctl is-enabled pg-backup.timer
+  register: timer_enabled
+  changed_when: false
+  failed_when: (postgres_backup_enabled | default(false)) | bool and timer_enabled.stdout.strip() != "enabled"
