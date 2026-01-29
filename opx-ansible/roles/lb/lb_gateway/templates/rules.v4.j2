@@ -23,7 +23,6 @@
 # node_exporter on lb-vm (scraped from mgmt subnet)
 -A INPUT -i eth1 -p tcp --dport 9100 -s 192.168.55.0/24 -j ACCEPT
 
-
 # --- FORWARD (routing) ---
 -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
@@ -39,6 +38,8 @@
 # Internet egress (what we achieved: mgmt-vm + docker-vm)
 -A FORWARD -i eth1 -o eth0 -s 192.168.55.10/32 -j ACCEPT
 -A FORWARD -i eth1 -o eth0 -s 192.168.55.30/32 -j ACCEPT
+-A FORWARD -s 192.168.1.50/32 -d 192.168.55.30/32 -i eth0 -o eth1 -p icmp -j ACCEPT
+-A FORWARD -s 192.168.1.50/32 -d 192.168.55.30/32 -i eth0 -o eth1 -p tcp --dport 3000 -m conntrack --ctstate NEW -j ACCEPT
 
 COMMIT
 
