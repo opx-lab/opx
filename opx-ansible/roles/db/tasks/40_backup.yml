@@ -46,13 +46,6 @@
     group: "{{ postgres_backup_export_group | default('opx') }}"
     mode: "02750"   # setgid so files/dirs keep the group
 
-- name: Restart sshd if opx group membership changed (new logins get new groups)
-  tags: [backup]
-  ansible.builtin.service:
-    name: ssh
-    state: restarted
-  when: opx_group_change is changed
-
 - name: Install backup script
   tags: [backup]
   ansible.builtin.copy:
@@ -65,21 +58,21 @@
       set -euo pipefail
 
       BACKUP_DIR="{{ postgres_backup_dir | default('/var/backups/postgresql') }}"
-      KEEP="{{ postgres_backup_keep | default(4) }}"
       EXPORT_DIR="{{ postgres_backup_export_dir | default('/var/backups/postgresql-export') }}"
       EXPORT_GROUP="{{ postgres_backup_export_group | default('opx') }}"
+      KEEP="{{ postgres_backup_keep | default(4) }}"
 
       TS="$(date -u +%Y%m%dT%H%M%SZ)"
       OUT="${BACKUP_DIR}/pg_dumpall_${TS}.sql.gz"
 
       install -d -m 0750 -o postgres -g postgres "${BACKUP_DIR}"
-      install -d -m 0750 -o root -g "${EXPORT_GROUP}" "${EXPORT_DIR}"
+      install -d -m 02750 -o root -g "${EXPORT_GROUP}" "${EXPORT_DIR}"   # setgid
 
       sudo -u postgres pg_dumpall --clean --if-exists | gzip -9 > "${OUT}"
       chown postgres:postgres "${OUT}"
       chmod 0640 "${OUT}"
 
-      # Keep only N newest backups locally
+      # Retention in BACKUP_DIR (keep newest KEEP)
       mapfile -t FILES < <(ls -1t "${BACKUP_DIR}"/pg_dumpall_*.sql.gz 2>/dev/null || true)
       NUM="$(printf '%s\n' "${FILES[@]}" | sed '/^$/d' | wc -l)"
       if (( NUM > KEEP )); then
@@ -88,13 +81,24 @@
         done
       fi
 
-      # Export newest backups for pull (readable by EXPORT_GROUP)
-      rsync -a --delete --include 'pg_dumpall_*.sql.gz' --exclude '*' "${BACKUP_DIR}/" "${EXPORT_DIR}/"
-      chown root:"${EXPORT_GROUP}" "${EXPORT_DIR}"/pg_dumpall_*.sql.gz 2>/dev/null || true
-      chmod 0640 "${EXPORT_DIR}"/pg_dumpall_*.sql.gz 2>/dev/null || true
+      # Export for pull (force perms regardless of umask)
+      rsync -a --delete \
+        --include 'pg_dumpall_*.sql.gz' --exclude '*' \
+        --chown=root:"${EXPORT_GROUP}" --chmod=F640,D2750 \
+        "${BACKUP_DIR}/" "${EXPORT_DIR}/"
 
-      # Retention in export dir too
-      ls -1t "${EXPORT_DIR}"/pg_dumpall_*.sql.gz 2>/dev/null | tail -n +$((KEEP+1)) | xargs -r rm -f --
+      # Final enforcement (drift-proof)
+      chown root:"${EXPORT_GROUP}" "${EXPORT_DIR}"
+      chmod 02750 "${EXPORT_DIR}"
+
+      # Retention in EXPORT_DIR too
+      mapfile -t EFILES < <(ls -1t "${EXPORT_DIR}"/pg_dumpall_*.sql.gz 2>/dev/null || true)
+      ENUM="$(printf '%s\n' "${EFILES[@]}" | sed '/^$/d' | wc -l)"
+      if (( ENUM > KEEP )); then
+        for f in "${EFILES[@]:KEEP}"; do
+          rm -f -- "$f"
+        done
+      fi
 
 - name: systemd unit for backup
   tags: [backup]
@@ -153,16 +157,16 @@
     state: stopped
   when: not ((postgres_backup_enabled | default(false)) | bool)
 
-- name: Check pg-backup.timer is active
-  tags: [backup]
+- name: Check pg-backup.timer is enabled
+  ansible.builtin.command: systemctl is-enabled pg-backup.timer
+  register: timer_enabled
+  changed_when: false
+  failed_when: (postgres_backup_enabled | default(false)) | bool and timer_enabled.stdout.strip() != "enabled"
+
+
+- name: Check pg-backup.timer is enabled
   ansible.builtin.command: systemctl is-active pg-backup.timer
   register: timer_active
   changed_when: false
   failed_when: (postgres_backup_enabled | default(false)) | bool and timer_active.stdout.strip() != "active"
 
-- name: Check pg-backup.timer is enabled
-  tags: [backup]
-  ansible.builtin.command: systemctl is-enabled pg-backup.timer
-  register: timer_enabled
-  changed_when: false
-  failed_when: (postgres_backup_enabled | default(false)) | bool and timer_enabled.stdout.strip() != "enabled"
