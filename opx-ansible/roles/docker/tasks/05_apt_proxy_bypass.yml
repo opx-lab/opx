@@ -1,0 +1,10 @@
+- name: Bypass apt proxy for Docker repo (HTTPS)
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/02proxy-bypass-docker
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      Acquire::https::Proxy::download.docker.com "DIRECT";
+      Acquire::https::Proxy::download.docker.io "DIRECT";
+  when: docker_apt_repo | bool

@@ -1,0 +1,8 @@
+---
+- name: Apply sysctl settings
+  ansible.builtin.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: true
+  loop: "{{ common_sysctl | dict2items }}"

@@ -1,0 +1,19 @@
+- name: Install node_exporter (Debian package)
+  ansible.builtin.apt:
+    name: prometheus-node-exporter
+    state: present
+    update_cache: false
+
+- name: Ensure node_exporter listens on all interfaces
+  ansible.builtin.lineinfile:
+    path: /etc/default/prometheus-node-exporter
+    regexp: '^ARGS='
+    line: 'ARGS="--web.listen-address=0.0.0.0:9100"'
+    create: true
+  notify: restart node_exporter
+
+- name: Ensure node_exporter enabled and started
+  ansible.builtin.systemd:
+    name: prometheus-node-exporter
+    enabled: true
+    state: started

@@ -1,0 +1,32 @@
+---
+- name: Setup mgmt SSH (private key + config)
+  hosts: mgmt
+  become: true
+  roles:
+    - mgmt_ssh
+
+- name: Install mgmt public key on targets
+  hosts: "db:docker:monitor"
+  become: true
+  vars:
+    mgmt_pubkey_path: "{{ playbook_dir }}/../artifacts/ssh/mgmt_ed25519.pub"
+  tasks:
+    - name: Ensure ~/.ssh exists for opx
+      ansible.builtin.file:
+        path: "/home/{{ ansible_user }}/.ssh"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: "0700"
+
+    - name: Read mgmt public key (from opx-pc)
+      ansible.builtin.set_fact:
+        mgmt_pubkey: "{{ lookup('ansible.builtin.file', mgmt_pubkey_path) | trim }}"
+      delegate_to: localhost
+      run_once: true
+
+    - name: Authorize mgmt key for opx
+      ansible.posix.authorized_key:
+        user: "{{ ansible_user }}"
+        key: "{{ mgmt_pubkey }}"
+        state: present

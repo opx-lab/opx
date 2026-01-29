@@ -1,0 +1,9 @@
+- name: Manage /etc/hosts
+  ansible.builtin.blockinfile:
+    path: /etc/hosts
+    create: true
+    marker: "# {mark} OPX-LAB HOSTS"
+    block: |
+      {% for h in opx_hosts_entries %}
+      {{ h.ip }} {{ h.name }}
+      {% endfor %}

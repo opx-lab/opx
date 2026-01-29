@@ -1,0 +1,12 @@
+apt_proxy_url: "http://192.168.1.50:3142"
+apt_https_tunnel_enabled: false
+mgmt_cidr: "192.168.55.0/24"
+opx_pc_ip: "192.168.1.50"
+
+opx_hosts_entries:
+  - { ip: "192.168.55.10", name: "mgmt-vm" }
+  - { ip: "192.168.55.20", name: "monitor-vm" }
+  - { ip: "192.168.55.30", name: "docker-vm" }
+  - { ip: "192.168.55.60", name: "db-vm" }
+  - { ip: "192.168.55.30",  name: "git.opx.lab" }
+  - { ip: "192.168.55.30",  name: "reg.opx.lab" }

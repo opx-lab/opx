@@ -1,0 +1,6 @@
+---
+- name: Baseline config for all VMs except lb-vm
+  hosts: all:!lb
+  become: true
+  roles:
+    - common

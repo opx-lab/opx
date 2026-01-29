@@ -1,0 +1,149 @@
+---
+# =========================
+# Chrony (lb-vm: upstream opx-pc, serve mgmt subnet)
+# =========================
+- name: Install chrony
+  ansible.builtin.apt:
+    name: chrony
+    state: present
+    update_cache: false
+    lock_timeout: 60
+
+- name: Configure chrony (lb-vm upstream opx-pc, serve mgmt subnet)
+  ansible.builtin.copy:
+    dest: /etc/chrony/chrony.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      confdir /etc/chrony/conf.d
+
+      server 192.168.1.50 iburst
+      makestep 1.0 3
+      allow 192.168.55.0/24
+
+      sourcedir /run/chrony-dhcp
+      sourcedir /etc/chrony/sources.d
+
+      keyfile /etc/chrony/chrony.keys
+      driftfile /var/lib/chrony/chrony.drift
+      ntsdumpdir /var/lib/chrony
+      logdir /var/log/chrony
+
+      maxupdateskew 100.0
+      rtcsync
+      leapsectz right/UTC
+  notify: restart_chrony
+
+- name: Ensure chrony is enabled and started
+  ansible.builtin.systemd:
+    name: chrony
+    enabled: true
+    state: started
+
+# =========================
+# Routing/NAT dependencies
+# =========================
+- name: Install iptables persistence + procps (sysctl)
+  ansible.builtin.apt:
+    name:
+      - iptables
+      - iptables-persistent
+      - netfilter-persistent
+      - procps
+    state: present
+    update_cache: false
+    lock_timeout: 60
+
+- name: Prevent ARP flux (two NICs on same bridge)
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/99-arp-flux.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      net.ipv4.conf.all.arp_ignore=1
+      net.ipv4.conf.default.arp_ignore=1
+      net.ipv4.conf.all.arp_announce=2
+      net.ipv4.conf.default.arp_announce=2
+      net.ipv4.conf.eth0.arp_ignore=1
+      net.ipv4.conf.eth0.arp_announce=2
+      net.ipv4.conf.eth1.arp_ignore=1
+      net.ipv4.conf.eth1.arp_announce=2
+
+- name: Apply sysctl settings from files
+  ansible.builtin.command: sysctl --system
+  changed_when: false
+
+- name: Enable IPv4 forwarding
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    state: present
+    reload: true
+
+# =========================
+# iptables rules + persistence (idempotent)
+# =========================
+- name: Deploy IPv4 iptables rules
+  ansible.builtin.template:
+    src: rules.v4.j2
+    dest: /etc/iptables/rules.v4
+    owner: root
+    group: root
+    mode: "0644"
+  register: rules_v4
+
+- name: Apply iptables rules (atomic)
+  ansible.builtin.shell: iptables-restore < /etc/iptables/rules.v4
+  args:
+    executable: /bin/bash
+  when: rules_v4.changed
+  changed_when: true
+
+- name: Ensure netfilter-persistent is enabled and started
+  ansible.builtin.systemd:
+    name: netfilter-persistent
+    enabled: true
+    state: started
+
+# =========================
+# NGINX reverse proxy (git.opx.lab, reg.opx.lab)
+# =========================
+- name: Install nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+    update_cache: false
+    lock_timeout: 60
+
+- name: Remove default nginx site (avoid conflicts)
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Deploy opx-lab nginx vhosts
+  ansible.builtin.template:
+    src: opx-lab.conf.j2
+    dest: /etc/nginx/sites-available/opx-lab.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: reload_nginx
+
+- name: Enable opx-lab nginx site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/opx-lab.conf
+    dest: /etc/nginx/sites-enabled/opx-lab.conf
+    state: link
+  notify: reload_nginx
+
+- name: Validate nginx config
+  ansible.builtin.command: nginx -t
+  changed_when: false
+
+- name: Ensure nginx is enabled and running
+  ansible.builtin.systemd:
+    name: nginx
+    enabled: true
+    state: started

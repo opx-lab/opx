@@ -1,0 +1,72 @@
+---
+- name: Detect installed postgres major versions
+  ansible.builtin.command: bash -lc 'ls -1 /usr/lib/postgresql 2>/dev/null | sort -V | tail -n1'
+  register: _pg_major
+  changed_when: false
+
+- name: Check if any cluster exists
+  ansible.builtin.command: bash -lc "pg_lsclusters --no-header 2>/dev/null | wc -l"
+  register: _pg_clusters_count
+  changed_when: false
+
+- name: Create default cluster if missing
+  ansible.builtin.command: bash -lc "pg_createcluster {{ _pg_major.stdout }} main --start"
+  when: _pg_clusters_count.stdout | int == 0
+  become: true
+
+- name: Find postgresql.conf
+  ansible.builtin.find:
+    paths: /etc/postgresql
+    patterns: postgresql.conf
+    file_type: file
+    recurse: true
+  register: _pg_conf
+
+- name: Fail if postgresql.conf not found
+  ansible.builtin.fail:
+    msg: "postgresql.conf not found under /etc/postgresql. Cluster creation failed."
+  when: _pg_conf.matched | int == 0
+
+- name: Set postgres facts (paths)
+  ansible.builtin.set_fact:
+    pg_postgresql_conf: "{{ (_pg_conf.files | map(attribute='path') | select('search','/main/postgresql\\.conf$') | list | first) | default(_pg_conf.files[0].path) }}"
+    pg_conf_dir: "{{ ( (_pg_conf.files | map(attribute='path') | list | first) | dirname ) }}"
+    pg_pg_hba_conf: "{{ ( ( (_pg_conf.files | map(attribute='path') | list | first) | dirname ) ~ '/pg_hba.conf' ) }}"
+
+- name: Configure listen_addresses
+  ansible.builtin.lineinfile:
+    path: "{{ pg_postgresql_conf }}"
+    regexp: '^#?\s*listen_addresses\s*='
+    line: "listen_addresses = '0.0.0.0'"
+  notify: Restart postgresql
+  become: true
+
+- name: Configure port (optional but explicit)
+  ansible.builtin.lineinfile:
+    path: "{{ pg_postgresql_conf }}"
+    regexp: "^[#\\s]*port\\s*="
+    line: "port = {{ postgres_port }}"
+    backrefs: false
+  notify: Restart postgresql
+  become: true
+
+# Ensures ONLY the intended hosts have remote access via pg_hba,
+# without duplicating lines on reruns.
+- name: Ensure pg_hba allows opx-lab hosts (mgmt + docker) explicitly
+  become: true
+  ansible.builtin.blockinfile:
+    path: "{{ pg_pg_hba_conf }}"
+    marker: "# {mark} OPX-LAB pg_hba"
+    insertafter: EOF
+    block: |
+      # Allow mgmt-vm and docker-vm to reach PostgreSQL
+      host    all             all             192.168.55.10/32            scram-sha-256
+      host    all             all             192.168.55.30/32            scram-sha-256
+  notify: Restart postgresql
+
+- name: Ensure postgresql is enabled and running
+  become: true
+  ansible.builtin.systemd:
+    name: postgresql
+    enabled: true
+    state: started

@@ -1,0 +1,3 @@
+[
+  { "targets": ["{{ hostvars['db-vm'].ansible_host | default('192.168.55.60') }}:9187"], "labels": { "node": "db-vm" } }
+]

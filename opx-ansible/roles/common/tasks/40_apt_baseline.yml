@@ -1,0 +1,40 @@
+- name: apt update with hard timeout + retries (must succeed)
+  ansible.builtin.shell: |
+    set -e
+    export DEBIAN_FRONTEND=noninteractive
+    timeout 90s apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=15 -o Acquire::https::Timeout=15 update
+  args:
+    executable: /bin/bash
+  register: apt_update_out
+  retries: 3
+  delay: 5
+  until: apt_update_out.rc == 0
+  changed_when: false
+
+- name: Install common packages
+  ansible.builtin.apt:
+    name: "{{ common_packages }}"
+    state: present
+    update_cache: false
+    lock_timeout: 120
+
+- name: Ensure Ansible remote_tmp exists and is sticky
+  ansible.builtin.file:
+    path: /tmp/.ansible-opx/tmp
+    state: directory
+    owner: root
+    group: root
+    mode: "1777"
+  become: true
+
+
+######### TEMP#####################
+- name: Ensure iptables persistence packages are absent on non-LB VMs
+  ansible.builtin.apt:
+    name:
+      - iptables-persistent
+      - netfilter-persistent
+    state: absent
+    purge: true
+  when: inventory_hostname != 'lb-vm'
+  become: true

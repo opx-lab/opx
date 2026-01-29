@@ -1,0 +1,45 @@
+- name: Restore PostgreSQL from latest backup stored on opx-pc
+  hosts: db
+  become: true
+  vars:
+    local_restore_dir: "{{ postgres_backup_dir | default('/var/backups/postgresql') }}"
+  tasks:
+    - name: Ensure local restore dir exists
+      ansible.builtin.file:
+        path: "{{ local_restore_dir }}"
+        state: directory
+        owner: postgres
+        group: postgres
+        mode: "0750"
+
+    - name: Find latest backup on opx-pc
+      ansible.builtin.shell: |
+        set -euo pipefail
+        ssh -o BatchMode=yes "{{ postgres_backup_push_user }}@{{ postgres_backup_push_host }}" \
+          "ls -1t '{{ postgres_backup_push_path }}'/pg_dumpall_*.sql.gz | head -n1"
+      register: remote_latest
+      changed_when: false
+
+    - name: Pull latest backup from opx-pc to db-vm
+      ansible.builtin.shell: |
+        set -euo pipefail
+        rsync -a "{{ postgres_backup_push_user }}@{{ postgres_backup_push_host }}:{{ remote_latest.stdout }}" "{{ local_restore_dir }}/"
+      args:
+        executable: /bin/bash
+
+    - name: Set latest local filename fact
+      ansible.builtin.set_fact:
+        latest_local: "{{ local_restore_dir }}/{{ remote_latest.stdout | basename }}"
+
+    - name: Ensure PostgreSQL is running
+      ansible.builtin.systemd:
+        name: postgresql
+        state: started
+
+    - name: Restore (WARNING drops/recreates objects because backup uses --clean --if-exists)
+      become_user: postgres
+      ansible.builtin.shell: |
+        set -euo pipefail
+        zcat "{{ latest_local }}" | psql -v ON_ERROR_STOP=1
+      args:
+        executable: /bin/bash

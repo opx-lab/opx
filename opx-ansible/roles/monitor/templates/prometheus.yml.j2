@@ -1,0 +1,30 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['127.0.0.1:9093']
+
+rule_files:
+  - /etc/prometheus/rules/*.yml
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["127.0.0.1:9090"]
+
+  - job_name: "node_exporter"
+    file_sd_configs:
+      - files:
+          - /etc/prometheus/file_sd/node_exporter.json
+        refresh_interval: 30s
+
+  - job_name: "postgres_exporter"
+    metrics_path: /metrics
+    scheme: http
+    file_sd_configs:
+      - files:
+          - /etc/prometheus/file_sd/postgres_exporter.json
+        refresh_interval: 30s

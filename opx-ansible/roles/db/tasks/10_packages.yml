@@ -1,0 +1,33 @@
+- name: Ensure ACL tools present (needed for become_user tempfiles)
+  ansible.builtin.apt:
+    name: acl
+    state: present
+    update_cache: true
+  become: true
+
+- name: Install DB packages (creates postgres user/group)
+  ansible.builtin.apt:
+    name:
+      - postgresql
+      - postgresql-client
+      - prometheus-postgres-exporter
+      - python3-psycopg2
+    state: present
+    update_cache: true
+  become: true
+
+- name: Ensure postgres system user exists (safety in case package install is partial)
+  ansible.builtin.user:
+    name: postgres
+    system: true
+    state: present
+  become: true
+
+- name: Ensure Ansible remote_tmp exists for postgres become_user
+  ansible.builtin.file:
+    path: /var/tmp/.ansible-postgres/tmp
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: "0750"
+  become: true

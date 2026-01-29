@@ -1,0 +1,77 @@
+On every VM
+
+    CPU: usage, load, steal time
+
+    Memory: available, swap in/out, OOM kills
+
+    Disk: free %, inode %, IO latency, filesystem errors, read-only remount
+
+    Network: interface up/down, errors/drops, bandwidth
+
+    Time sync: NTP offset/drift
+
+    systemd: failed units, restart loops
+
+    Reboots / uptime
+
+Logs (centralized)
+
+    journald + kernel (errors, OOM, disk IO errors)
+
+    sshd: auth failures, brute-force patterns
+
+    sudo usage
+
+    systemd unit failures
+
+Role-specific
+
+    lb-vm: conntrack usage, iptables drops, NAT forwarding, WAN/LAN link state
+
+    mgmt-vm: SSH availability, Ansible/automation logs
+
+    docker-vm: container up/down, restart loops, CPU/mem per container
+
+    monitor-vm: Prometheus targets up, scrape failures, disk usage
+
+    db-vm (if any): connections, slow queries, disk growth, service health
+
+Synthetic checks
+
+    HTTP 200 + latency for exposed services
+
+    TCP port checks (SSH, DB, registry, etc.)
+
+    TLS certificate expiry
+
+Alerts (only these)
+
+    Disk <10% or inode <10%
+
+    OOM kill
+
+    Filesystem read-only
+
+    Critical systemd service down
+
+    Target/scrape down in Prometheus
+
+    Conntrack >80% (lb-vm)
+
+    WAN down (lb-vm)
+
+    Time drift > threshold
+
+    Repeated SSH auth failures
+
+Grafana dashboards
+
+    Fleet overview (CPU/mem/disk/time/alerts)
+
+    Per-VM node exporter
+
+    lb-vm network + NAT
+
+    Service/app health
+
+    Logs: error rate + latest critical entries

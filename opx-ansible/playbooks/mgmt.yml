@@ -1,0 +1,4 @@
+- hosts: mgmt-vm
+  become: yes
+  roles:
+     - mgmt

@@ -1,0 +1,11 @@
+# host_vars/db-vm.yml
+ansible_host: 192.168.55.60
+ansible_user: opx
+
+# postgres_backup_enabled: true
+# postgres_backup_keep: 2
+
+# postgres_backup_push_enabled: true
+# postgres_backup_push_host: 192.168.1.50
+# postgres_backup_push_user: opx
+# postgres_backup_push_path: /srv/backups/opx-lab/db-vm

@@ -1,0 +1,28 @@
+---
+- name: Ensure file_sd directory exists
+  become: true
+  ansible.builtin.file:
+    path: /etc/prometheus/file_sd
+    state: directory
+    owner: prometheus
+    group: prometheus
+    mode: "0755"
+
+- name: Install postgres_exporter target file
+  become: true
+  ansible.builtin.copy:
+    dest: /etc/prometheus/file_sd/postgres_exporter.json
+    owner: prometheus
+    group: prometheus
+    mode: "0644"
+    content: |
+      [
+        { "targets": ["192.168.55.60:9187"], "labels": { "node": "db-vm" } }
+      ]
+  notify: restart_prometheus
+
+
+- name: Validate Prometheus config before restart
+  become: true
+  ansible.builtin.command: promtool check config /etc/prometheus/prometheus.yml
+  changed_when: false

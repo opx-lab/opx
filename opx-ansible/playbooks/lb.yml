@@ -1,5 +1,7 @@
-- name: Configure lb-vm NAT gateway (iptables)
+# 1) Configure lb-vm locally first (no dependency on other VMs)
+- name: Bootstrap lb-vm
   hosts: lb
   become: true
   roles:
-    - lb_iptables
+    - lb/lb_gateway
+  

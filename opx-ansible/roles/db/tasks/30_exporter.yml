@@ -1,0 +1,70 @@
+---
+- name: Ensure exporter env file exists (Debian)
+  ansible.builtin.stat:
+    path: /etc/default/prometheus-postgres-exporter
+  register: _exp_env
+
+- name: Fail if exporter env file missing
+  ansible.builtin.fail:
+    msg: "/etc/default/prometheus-postgres-exporter not found. Is prometheus-postgres-exporter installed?"
+  when: not _exp_env.stat.exists
+
+- name: Create exporter DB user
+  community.postgresql.postgresql_user:
+    name: "{{ postgres_exporter_user | default('postgres_exporter') }}"
+    password: "{{ postgres_exporter_password }}"
+    login_db: postgres
+    role_attr_flags: "LOGIN"
+    state: present
+  become: true
+  become_user: postgres
+
+- name: Check if exporter already has pg_monitor
+  community.postgresql.postgresql_query:
+    login_db: postgres
+    query: |
+      SELECT 1
+      FROM pg_auth_members m
+      JOIN pg_roles r ON r.oid = m.roleid
+      JOIN pg_roles u ON u.oid = m.member
+      WHERE r.rolname = 'pg_monitor'
+        AND u.rolname = '{{ postgres_exporter_user | default("postgres_exporter") }}';
+  become: true
+  become_user: postgres
+  register: exporter_pg_monitor_check
+  changed_when: false
+
+- name: Grant exporter minimal privileges (read-only stats)
+  community.postgresql.postgresql_query:
+    login_db: postgres
+    query: "GRANT pg_monitor TO {{ postgres_exporter_user | default('postgres_exporter') }};"
+  become: true
+  become_user: postgres
+  when: (exporter_pg_monitor_check.query_result | default([])) | length == 0
+
+- name: Set DATA_SOURCE_NAME for exporter (Debian env file)
+  ansible.builtin.lineinfile:
+    path: /etc/default/prometheus-postgres-exporter
+    regexp: '^DATA_SOURCE_NAME='
+    line: "DATA_SOURCE_NAME='postgresql://{{ postgres_exporter_user | default('postgres_exporter') }}:{{ postgres_exporter_password | urlencode }}@127.0.0.1:5432/postgres?sslmode=disable'"
+    create: false
+    owner: prometheus
+    group: prometheus
+    mode: "0640"
+  become: true
+  notify: Restart prometheus-postgres-exporter
+  
+- name: Ensure exporter env file perms (Debian)
+  become: true
+  ansible.builtin.file:
+    path: /etc/default/prometheus-postgres-exporter
+    owner: prometheus
+    group: prometheus
+    mode: "0640"
+
+- name: Ensure exporter enabled and started
+  ansible.builtin.systemd:
+    name: prometheus-postgres-exporter
+    enabled: true
+    state: started
+  become: true

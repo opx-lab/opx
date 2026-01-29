@@ -1,0 +1,27 @@
+---
+- name: Ensure /etc/apt/apt.conf.d exists
+  ansible.builtin.file:
+    path: /etc/apt/apt.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Configure APT proxy (HTTP + optional HTTPS tunnel)
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/01proxy
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      Acquire::http::Proxy "{{ apt_proxy_url }}";
+      {% if apt_https_tunnel_enabled | default(true) | bool %}
+      Acquire::https::Proxy "{{ apt_proxy_url }}";
+      {% endif %}
+  when: apt_proxy_url is defined and apt_proxy_url | length > 0
+
+- name: Remove APT proxy config when proxy is not set
+  ansible.builtin.file:
+    path: /etc/apt/apt.conf.d/01proxy
+    state: absent
+  when: apt_proxy_url is not defined or apt_proxy_url | length == 0

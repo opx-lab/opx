@@ -1,0 +1,36 @@
+#!/usr/sbin/nft -f
+flush ruleset
+
+table inet filter {
+  chain input {
+    type filter hook input priority filter; policy drop;
+
+    iif "lo" accept
+    ct state established,related accept
+
+    # SSH
+    ip saddr 192.168.1.50 tcp dport 22 accept     # opx host
+    ip saddr 192.168.55.2  tcp dport 22 accept    # jump
+    ip saddr 192.168.55.10 tcp dport 22 accept    # mgmt-vm
+
+    # PostgreSQL
+    ip saddr 192.168.55.10 tcp dport 5432 accept  # mgmt-vm
+    ip saddr 192.168.55.30 tcp dport 5432 accept  # docker-vm
+
+    # Postgres exporter
+    ip saddr 192.168.55.40 tcp dport 9187 accept  # monitor-vm
+
+    # monitor-vm
+    ip saddr 192.168.55.20 tcp dport 9100 accept
+    ip saddr 192.168.55.20 tcp dport 9187 accept
+    ip protocol icmp accept
+  }
+
+  chain forward {
+    type filter hook forward priority filter; policy drop;
+  }
+
+  chain output {
+    type filter hook output priority filter; policy accept;
+  }
+}

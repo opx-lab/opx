@@ -1,0 +1,12 @@
+postgres_listen_addresses: "0.0.0.0"
+postgres_port: 5432
+
+postgres_exporter_port: 9187
+postgres_exporter_user: postgres_exporter
+postgres_exporter_db: postgres
+
+ufw_allow_from:
+  - 192.168.55.0/24
+
+# DB objects provisioning
+postgres_provision: []

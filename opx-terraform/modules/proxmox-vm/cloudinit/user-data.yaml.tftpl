@@ -1,0 +1,37 @@
+#cloud-config
+
+preserve_hostname: false
+hostname: ${hostname}
+manage_etc_hosts: true
+
+bootcmd:
+  - [ bash, -lc, "install -d -m 700 -o ${username} -g ${username} /home/${username}/.ssh" ]
+
+write_files:
+  - path: /etc/sudoers.d/opx-nopasswd
+    owner: root:root
+    permissions: '0440'
+    content: |
+      opx ALL=(ALL:ALL) NOPASSWD:ALL
+
+%{ if enable_apt_proxy ~}
+  - path: /etc/apt/apt.conf.d/01proxy
+    owner: root:root
+    permissions: '0644'
+    content: |
+      Acquire::http::Proxy "http://192.168.1.50:3142";
+%{ endif ~}
+
+  - path: /home/${username}/.ssh/authorized_keys
+    owner: ${username}:${username}
+    permissions: '0600'
+    content: |
+%{ for k in ssh_public_keys ~}
+      ${k}
+%{ endfor ~}
+
+runcmd:
+  - [ bash, -lc, "chown -R ${username}:${username} /home/${username}/.ssh" ]
+  - [ bash, -lc, "systemctl restart ssh || true" ]
+
+final_message: "cloud-init finished: ssh keys enforced"

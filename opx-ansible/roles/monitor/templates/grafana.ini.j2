@@ -1,0 +1,10 @@
+[server]
+http_addr = {{ grafana_listen_address }}
+http_port = {{ grafana_port }}
+
+[security]
+admin_user = {{ grafana_admin_user }}
+admin_password = {{ grafana_admin_password }}
+
+[auth.anonymous]
+enabled = false

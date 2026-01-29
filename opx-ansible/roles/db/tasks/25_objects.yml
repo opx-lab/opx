@@ -1,0 +1,62 @@
+- name: Provision application databases/roles/schemas/privileges (data-driven)
+  when: (postgres_provision | default([])) | length > 0
+  become: true
+  become_user: postgres
+  block:
+    - name: Create owner roles
+      community.postgresql.postgresql_user:
+        name: "{{ item.owner_role }}"
+        password: "{{ lookup('vars', item.owner_password_var) }}"
+        role_attr_flags: "LOGIN"
+        state: present
+      loop: "{{ postgres_provision | default([]) }}"
+
+    - name: Create app roles (no createdb)
+      community.postgresql.postgresql_user:
+        name: "{{ item.app_role }}"
+        password: "{{ lookup('vars', item.app_password_var) }}"
+        role_attr_flags: "LOGIN"
+        state: present
+      loop: "{{ postgres_provision | default([]) }}"
+
+    - name: Create databases owned by owner_role
+      community.postgresql.postgresql_db:
+        name: "{{ item.db }}"
+        owner: "{{ item.owner_role }}"
+        state: present
+      loop: "{{ postgres_provision | default([]) }}"
+
+    - name: Revoke default PUBLIC access on databases
+      community.postgresql.postgresql_query:
+        db: postgres
+        query: "REVOKE ALL ON DATABASE {{ item.db | quote }} FROM PUBLIC;"
+      loop: "{{ postgres_provision | default([]) }}"
+
+    - name: Grant CONNECT on database to app_role
+      community.postgresql.postgresql_privs:
+        db: postgres
+        type: database
+        objs: "{{ item.db }}"
+        roles: "{{ item.app_role }}"
+        privs: "CONNECT"
+        state: present
+      loop: "{{ postgres_provision | default([]) }}"
+
+    - name: Create schemas
+      community.postgresql.postgresql_schema:
+        db: "{{ item.0.db }}"
+        name: "{{ item.1 }}"
+        owner: "{{ item.0.owner_role }}"
+        state: present
+      loop: "{{ (postgres_provision | default([])) | subelements('schemas', skip_missing=True) }}"
+
+    - name: Grant USAGE on schemas to app_role
+      community.postgresql.postgresql_privs:
+        db: "{{ item.0.db }}"
+        type: schema
+        objs: "{{ item.1 }}"
+        roles: "{{ item.0.app_role }}"
+        privs: "USAGE"
+        state: present
+      loop: "{{ (postgres_provision | default([])) | subelements('schemas', skip_missing=True) }}"
+    

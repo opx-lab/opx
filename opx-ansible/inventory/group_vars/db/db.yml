@@ -1,0 +1,20 @@
+mgmt_cidr: "192.168.55.0/24"
+opx_pc_ip: "192.168.1.50"
+db_ip: "192.168.55.60"
+postgres_port: 5432
+postgres_exporter_port: 9187
+
+postgres_exporter_user: "postgres_exporter"
+postgres_provision: []
+
+
+
+
+#### Database Backup Settings ####
+postgres_backup_enabled: false
+postgres_backup_keep: 4
+
+postgres_backup_push_enabled: true
+postgres_backup_push_host: 192.168.1.50
+postgres_backup_push_user: opx
+postgres_backup_push_path: /srv/backups/opx-lab/db-vm

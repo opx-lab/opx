@@ -1,0 +1,4 @@
+---
+- name: Set timezone
+  ansible.builtin.timezone:
+    name: "{{ common_timezone | default('Europe/Warsaw') }}"

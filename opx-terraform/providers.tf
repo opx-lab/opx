@@ -1,6 +1,6 @@
 terraform {
   cloud {
-    organization = "opx-lab"       # plain ASCII hyphen
+    organization = "opx-lab" # plain ASCII hyphen
     workspaces {
       name = "opx-workspace"
     }
@@ -10,7 +10,7 @@ terraform {
 
 
   required_providers {
-  # Proxmox provider for managing Proxmox VE resources
+    # Proxmox provider for managing Proxmox VE resources
     proxmox = {
       source = "bpg/proxmox"
     }
@@ -19,10 +19,15 @@ terraform {
 
 provider "proxmox" {
 
-  endpoint      = "https://192.168.1.50:8006/api2/json"
-  username         = var.pm_user
-  password     = var.pm_password
+  endpoint = "https://192.168.1.50:8006/api2/json"
+  username = var.pm_user
+  password = var.pm_password
   insecure = true
+
+  ssh {
+    agent = true
+    username = "root"
+  }
 
   # debug log
   #pm_log_enable = true

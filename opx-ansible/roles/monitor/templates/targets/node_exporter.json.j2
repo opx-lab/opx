@@ -1,0 +1,13 @@
+[
+{% set items = [] %}
+{% for h in (groups['all'] | sort) %}
+{%   if h == inventory_hostname %}
+{%     set tgt = "127.0.0.1:9100" %}
+{%   else %}
+{%     set ip = (hostvars[h].ansible_host | default(h)) %}
+{%     set tgt = ip ~ ":9100" %}
+{%   endif %}
+{%   set _ = items.append('  { "targets": ["' ~ tgt ~ '"], "labels": { "node": "' ~ h ~ '" } }') %}
+{% endfor %}
+{{ items | join(",\n") }}
+]

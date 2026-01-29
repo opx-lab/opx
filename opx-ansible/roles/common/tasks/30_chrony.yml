@@ -1,0 +1,27 @@
+- name: Install chrony
+  ansible.builtin.apt:
+    name: chrony
+    state: present
+    update_cache: false
+    lock_timeout: 60
+  when: "'lb' not in group_names"
+
+- name: Configure chrony client
+  ansible.builtin.copy:
+    dest: /etc/chrony/chrony.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      server {{ chrony_upstream_lb if 'lb' in group_names else chrony_upstream_default }} iburst
+      makestep 1.0 3
+      rtcsync
+  notify: restart chrony
+  when: "'lb' not in group_names"
+
+- name: Ensure chrony is enabled and started
+  ansible.builtin.systemd:
+    name: chrony
+    enabled: true
+    state: started
+  when: "'lb' not in group_names"

@@ -1,0 +1,49 @@
+---
+- name: Install Alertmanager (Debian package)
+  ansible.builtin.apt:
+    name: prometheus-alertmanager
+    state: present
+    update_cache: true
+
+- name: Gather service facts
+  ansible.builtin.service_facts:
+
+- name: Pick Alertmanager systemd unit (Debian variants)
+  ansible.builtin.set_fact:
+    alertmanager_unit: >-
+      {{
+        (
+          ['prometheus-alertmanager.service', 'alertmanager.service', 'prometheus-alertmanager', 'alertmanager']
+          | select('in', (ansible_facts.services.keys() | list))
+          | list
+          | first
+        )
+      }}
+
+- name: Fail if Alertmanager unit not found
+  ansible.builtin.fail:
+    msg: "Alertmanager installed but no unit found. Known units: {{ ansible_facts.services.keys() | list | sort }}"
+  when: alertmanager_unit is not defined or alertmanager_unit | length == 0
+
+- name: Ensure /etc/alertmanager exists
+  ansible.builtin.file:
+    path: /etc/alertmanager
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy Alertmanager config
+  ansible.builtin.template:
+    src: alertmanager.yml.j2
+    dest: /etc/alertmanager/alertmanager.yml
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart alertmanager
+
+- name: Ensure Alertmanager enabled and started
+  ansible.builtin.systemd:
+    name: "{{ alertmanager_unit }}"
+    enabled: true
+    state: started
