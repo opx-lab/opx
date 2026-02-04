@@ -1,0 +1,6 @@
+APP_DSN=host=192.168.55.60 port=5432 dbname=opx_app user=opx_app_api password=QWER sslmode=disable
+JOBS_DSN=host=192.168.55.60 port=5432 dbname=opx_jobs user=opx_jobs_worker password=QWER sslmode=disable
+WORKER_POLL_INTERVAL_SEC=2
+WORKER_HTTP_ADDR=0.0.0.0
+WORKER_HTTP_PORT=9109
+
