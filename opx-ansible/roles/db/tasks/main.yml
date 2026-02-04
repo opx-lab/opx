@@ -5,3 +5,4 @@
 - import_tasks: 25_objects.yml
 - import_tasks: 30_exporter.yml
 - import_tasks: 40_backup.yml
+- import_tasks: 45_app_schema.yml
