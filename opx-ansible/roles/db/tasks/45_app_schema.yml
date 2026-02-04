@@ -1,0 +1,83 @@
+---
+# One-time schema init for opx-app (DDL must be executed as postgres or owner role)
+# Runs on db-vm only.
+
+- name: Ensure opx_app schema/table exists (run as postgres)
+  become: true
+  become_user: postgres
+  ansible.builtin.shell: |
+    set -euo pipefail
+    psql -v ON_ERROR_STOP=1 -d opx_app <<'SQL'
+    CREATE SCHEMA IF NOT EXISTS app AUTHORIZATION opx_app_owner;
+
+    CREATE TABLE IF NOT EXISTS app.items (
+      id bigserial PRIMARY KEY,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      payload jsonb NOT NULL,
+      status text NOT NULL DEFAULT 'new'
+    );
+
+    ALTER TABLE app.items OWNER TO opx_app_owner;
+
+    CREATE INDEX IF NOT EXISTS items_created_at_idx ON app.items (created_at);
+
+    GRANT USAGE ON SCHEMA app TO opx_app_api, opx_app_ro;
+    GRANT SELECT, INSERT, UPDATE, DELETE ON app.items TO opx_app_api;
+    GRANT SELECT ON app.items TO opx_app_ro;
+
+    GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA app TO opx_app_api;
+    GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA app TO opx_app_ro;
+
+    ALTER DEFAULT PRIVILEGES FOR ROLE opx_app_owner IN SCHEMA app
+      GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO opx_app_api;
+    ALTER DEFAULT PRIVILEGES FOR ROLE opx_app_owner IN SCHEMA app
+      GRANT SELECT ON TABLES TO opx_app_ro;
+    ALTER DEFAULT PRIVILEGES FOR ROLE opx_app_owner IN SCHEMA app
+      GRANT USAGE, SELECT ON SEQUENCES TO opx_app_api;
+    ALTER DEFAULT PRIVILEGES FOR ROLE opx_app_owner IN SCHEMA app
+      GRANT USAGE, SELECT ON SEQUENCES TO opx_app_ro;
+    SQL
+
+  args:
+    executable: /bin/bash
+
+- name: Ensure opx_jobs schema/table exists (run as postgres)
+  become: true
+  become_user: postgres
+  ansible.builtin.shell: |
+    set -euo pipefail
+    psql -v ON_ERROR_STOP=1 -d opx_jobs <<'SQL'
+    CREATE SCHEMA IF NOT EXISTS jobs AUTHORIZATION opx_jobs_owner;
+
+    CREATE TABLE IF NOT EXISTS jobs.queue (
+      id bigserial PRIMARY KEY,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      run_at timestamptz NOT NULL DEFAULT now(),
+      payload jsonb NOT NULL,
+      status text NOT NULL DEFAULT 'new'
+    );
+
+    ALTER TABLE jobs.queue OWNER TO opx_jobs_owner;
+
+    CREATE INDEX IF NOT EXISTS queue_run_at_idx ON jobs.queue (run_at);
+    CREATE INDEX IF NOT EXISTS queue_status_idx ON jobs.queue (status);
+
+    GRANT USAGE ON SCHEMA jobs TO opx_jobs_worker, opx_jobs_ro;
+    GRANT SELECT, INSERT, UPDATE, DELETE ON jobs.queue TO opx_jobs_worker;
+    GRANT SELECT ON jobs.queue TO opx_jobs_ro;
+
+    GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA jobs TO opx_jobs_worker;
+    GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA jobs TO opx_jobs_ro;
+
+    ALTER DEFAULT PRIVILEGES FOR ROLE opx_jobs_owner IN SCHEMA jobs
+      GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO opx_jobs_worker;
+    ALTER DEFAULT PRIVILEGES FOR ROLE opx_jobs_owner IN SCHEMA jobs
+      GRANT SELECT ON TABLES TO opx_jobs_ro;
+    ALTER DEFAULT PRIVILEGES FOR ROLE opx_jobs_owner IN SCHEMA jobs
+      GRANT USAGE, SELECT ON SEQUENCES TO opx_jobs_worker;
+    ALTER DEFAULT PRIVILEGES FOR ROLE opx_jobs_owner IN SCHEMA jobs
+      GRANT USAGE, SELECT ON SEQUENCES TO opx_jobs_ro;
+    SQL
+
+  args:
+    executable: /bin/bash
