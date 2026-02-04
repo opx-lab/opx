@@ -1,0 +1,19 @@
+services:
+  opx-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    env_file: .env
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  opx-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+    env_file: .env
+    ports:
+      - "9109:9109"
+    restart: unless-stopped
+
